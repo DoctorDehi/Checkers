@@ -23,12 +23,13 @@ class Hrač:
                     print("Něco je špatně")
     
     def __repr__(self):
-        return 
+        return self.figurky
 
 def main():
     b = Board(8)                
     hrac = Hrač(Color.BLACK)
     hrac.nacti_figurku(b)
+    print(*hrac.figurky)
 
 
 
