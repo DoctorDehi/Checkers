@@ -21,21 +21,10 @@ class Hrač:
                     elif row[1] == "ww" and self.barva == Color.WHITE:
                         self.figurky.append(King(Color.WHITE, Position.from_notation(row[0]), b))
         except:
-            print("V načítání se vyskytla chyba")
+            raise Exception("V načítání se vyskytla chyba")
     
     def __repr__(self):
         return self.figurky
 
-def main():
-    b = Board(8)                
-    hrac = Hrač(Color.BLACK)
-    hrac.nacti_figurku(b)
-    print(*hrac.figurky)
-    b.nice_print()
-
-
-
-if __name__ == "__main__":
-    main()
 
 

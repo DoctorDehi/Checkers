@@ -1,3 +1,5 @@
+from pieces import King, Man, Piece
+
 class Board:
     def __init__(self, size):
         self.board = [[1 if (i+j) % 2 == 0 else 0 for j in range(size)] for i in range(size)]
@@ -21,5 +23,9 @@ class Board:
             pocet_radek += 1
             print(*print_list)
 
-    def load_piece(self, piece):
-        self.board[piece.position.row()[piece.position.column()]] = piece.symbol()
+    def load_piece(self, piece: Piece):
+        if self.board[piece.position.row][piece.position.column] == 1:
+            self.board[piece.position.row][piece.position.column] = piece
+        else:
+            raise Exception("Not placable field")
+        
