@@ -69,7 +69,7 @@ class Player:
 
 if __name__ == "__main__":
     game = Game()
-    game.load_game_from_CSV('nacti.csv')
+    game.load_game_from_CSV('saves/nacti.csv')
     game.board.nice_print()
     print(game.board.board)
     print(game.player_black.pieces)

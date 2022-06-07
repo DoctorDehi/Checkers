@@ -4,4 +4,3 @@ https://drive.google.com/file/d/1zu6Jhz9HtB31lC8TAxB1T5o68TpzryqG/view?usp=shari
 TODO:
     - vymyslet tahy
     - vymyslet propojení s interfacem
-    - zobrazování board v interfacu

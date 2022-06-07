@@ -9,7 +9,7 @@ class Hrač:
 
     def nacti_figurku(self, b: Board):
         try:
-            with open('nacti.csv', 'r') as soubor:
+            with open('saves/nacti.csv', 'r') as soubor:
                 reader = csv.reader(soubor)
                 for row in reader:
                     if row[1] == "b" and self.barva == Color.BLACK:

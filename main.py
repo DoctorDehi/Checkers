@@ -4,6 +4,6 @@ from game import Game
 
 if __name__ == "__main__":
     game = Game()
-    game.load_game_from_CSV("new_game.csv")
+    game.create_new_game()
     app = CheckersApp(game)
     app.run()
