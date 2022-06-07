@@ -8,6 +8,9 @@ from kivy.properties import OptionProperty, BooleanProperty
 
 from enum import Enum
 
+from pieces import Man, King, Position
+from pieces import Color as PieceColor
+
 
 class SquareColor(Enum):
     BLACK = 0
@@ -15,12 +18,12 @@ class SquareColor(Enum):
 
 
 class Square(Button):
-    piece = OptionProperty("None", options=["None", "White", "Black", "WhiteK", "BLackK"])
+    piece = OptionProperty("None", options=["None", "White", "Black", "WhiteK", "BlackK"])
 
-    def __init__(self, i):
-        self.line = 7 - i // 8
-        self.col = i % 8
-        self.scolor = SquareColor.BLACK if (self.line + self.col) % 2 == 0 else SquareColor.LIGHT
+    def __init__(self, row, column):
+        self.row = row
+        self.column = column
+        self.scolor = SquareColor.BLACK if (self.row + self.column) % 2 == 0 else SquareColor.LIGHT
         super().__init__(text=self.notation())
         self.size = (0, 0)
         self.bind(size=self.repaint)
@@ -46,21 +49,65 @@ class Square(Button):
 
     def on_press(self):
         self.piece = "White"
+        self.parent.game.player_white.add_piece(
+            Man(PieceColor.WHITE, Position(self.row, self.column), self.parent.game.board)
+        )
+        print(self.parent.game.board.board)
+        self.parent.draw_board()
 
     def notation(self):
-        return f"{'ABCDEFGH'[self.col]}{self.line + 1}"
+        return f"{'ABCDEFGH'[self.column]}{self.row + 1}"
+
+
+class BoardWidget(GridLayout):
+    squares = []
+
+    def __init__(self, game, *args, **kwargs):
+        super(BoardWidget, self).__init__(*args, **kwargs)
+        self.game = game
+
+    def add_widget(self, widget, *args, **kwargs):
+        super().add_widget(widget)
+
+    def create_board(self):
+        self.squares = []
+        size = self.game.board.get_size()
+        for row in range(size):
+            irow = []
+            for col in range(size):
+                square = Square(row, col)
+                irow.append(square)
+                self.add_widget(square)
+            self.squares.append(irow)
+        print(self.squares)
+
+    def draw_board(self):
+        for piece in self.game.player_white.pieces:
+            if isinstance(piece, Man):
+                color = "White"
+            else:
+                color = "WhiteK"
+            self.squares[piece.position.row][piece.position.column].piece = color
+
+        for piece in self.game.player_black.pieces:
+            if isinstance(piece, Man):
+                color = "Black"
+            else:
+                color = "BlackK"
+            self.squares[piece.position.row][piece.position.column].piece = color
 
 
 class InfoWidget(GridLayout):
     player = BooleanProperty(True)
 
-    def __init__(self):
+    def __init__(self, game):
         super().__init__(cols=2)
         self.add_widget(Label(text="Current player: "))
         self.player_label = Label(text="White" if self.player else "Black")
         self.player = True
         self.add_widget(self.player_label)
         self.bind(player=self.player_changed)
+        self.game = game
 
     def toggle_player(self):
         self.player = not self.player
@@ -74,15 +121,20 @@ class InfoWidget(GridLayout):
 
 
 class CheckersApp(App):
+    def __init__(self, game):
+        super().__init__()
+        self.game = game
+        self.squares = []
+
     def build(self):
         layout = BoxLayout(orientation="horizontal")
+        board = BoardWidget(self.game, cols=8, orientation="bt-lr")
+        board.create_board()
+        layout.add_widget(board)
+        layout.add_widget(InfoWidget(self.game))
 
-        ilayout = GridLayout(cols=8)
-
-        for i in range(64):
-            ilayout.add_widget(Square(i))
-
-        layout.add_widget(ilayout)
-        layout.add_widget(InfoWidget())
+        board.draw_board()
 
         return layout
+
+

@@ -5,13 +5,16 @@ from pieces import Man, King, Position, Color
 
 
 class Game:
+    BOARD_SIZE = 8
+    PIECES_PER_PLAYER = 12
+
     def __init__(self):
         self.board = Board()
         self.player_white = Player(Color.WHITE)
         self.player_black = Player(Color.BLACK)
 
     def create_new_game(self):
-        ...
+        self.load_game_from_CSV('new_game.csv')
 
     def load_game_from_CSV(self, filename):
         try:

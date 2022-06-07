@@ -1,5 +1,6 @@
 class Board:
     def __init__(self, size=8):
+        self.size = size
         self.board = [[1 if (i+j) % 2 == 0 else 0 for j in range(size)] for i in range(size)]
 
     def simple_print(self):
@@ -28,14 +29,20 @@ class Board:
         if self.is_field_placeable(piece.position.row, piece.position.column):
             self.board[piece.position.row][piece.position.column] = piece
         else:
-            raise Exception("Not placable field")
+            print("Not placable field")
 
     def move_piece(self, piece, new_row, new_column):
         if self.is_field_placeable(new_row, new_column):
             self.board[new_row][new_column] = piece
             self.board[piece.position.row][piece.position.column] = 1
         else:
-            raise Exception("The field piece should be moved to is not placeble!")
+            print("The field piece should be moved to is not placeble!")
 
     def remove_piece(self, piece):
         self.board[piece.position.row][piece.position.column] = 1
+
+    def get_board(self):
+        return self.board
+
+    def get_size(self):
+        return self.size

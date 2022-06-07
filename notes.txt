@@ -1,3 +1,7 @@
 UML diagram - rozpracováno
 https://drive.google.com/file/d/1zu6Jhz9HtB31lC8TAxB1T5o68TpzryqG/view?usp=sharing
 
+TODO:
+    - vymyslet tahy
+    - vymyslet propojení s interfacem
+    - zobrazování board v interfacu
