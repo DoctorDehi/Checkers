@@ -1,6 +1,6 @@
 import csv
 from pieces import Color, Man, King, Position
-from Board import Board
+from board import Board
 
 class Hrač:
     def __init__(self, barva: Color):

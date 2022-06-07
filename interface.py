@@ -30,9 +30,9 @@ class Square(Button):
         self.canvas.clear()
         with self.canvas:
             if self.scolor == SquareColor.LIGHT:
-                Color(0.9, 0.8, 0.5)
+                Color(0.99, 0.84, 0.57)
             else:
-                Color(0.25, 0.25, 0.25)
+                Color(0.35, 0.2, 0.12)
             Rectangle(pos=self.pos, size=self.size)
 
             if self.piece in ["Black", "BlackK"]:

@@ -1,5 +1,7 @@
 from enum import Enum
 
+from board import Board
+
 
 # VÝČTOVÝ TYP - omezený počet instancí
 class Color(Enum):
@@ -27,10 +29,6 @@ class Position:
         row = Position.rowchars.index(notation[0])
         column = int(notation[1]) - 1
         return Position(row, column)
-
-
-class Board:
-    ...
 
 
 class Move:
@@ -64,7 +62,10 @@ class Man(Piece):
 
     def symbol(self):
         # přebarvení
-        return "\u2B24"
+        if self.color == Color.WHITE:
+            return "\u2B24"
+        else:
+            return "\u25CB"
 
 
 class King(Piece):
@@ -72,7 +73,11 @@ class King(Piece):
         super().__init__(color, position, board)
 
     def symbol(self):
-        return "\u1F451"
+        #return "\u1F45"
+        if self.color == Color.WHITE:
+            return "\u29BF"
+        else:
+            return "\u29BE"
 
 
 if __name__ == '__main__':
@@ -92,4 +97,3 @@ if __name__ == '__main__':
     m = Man(Color.WHITE, Position.from_notation("A1"), b)
     k = King(Color.WHITE, Position.from_notation("A1"), b)
     print(k)
-
