@@ -52,7 +52,7 @@ class Square(Button):
         self.parent.game.player_white.add_piece(
             Man(PieceColor.WHITE, Position(self.row, self.column), self.parent.game.board)
         )
-        print(self.parent.game.board.board)
+        print(self.parent.game.board.get_board())
         self.parent.draw_board()
 
     def notation(self):
@@ -128,7 +128,7 @@ class CheckersApp(App):
 
     def build(self):
         layout = BoxLayout(orientation="horizontal")
-        board = BoardWidget(self.game, cols=8, orientation="bt-lr")
+        board = BoardWidget(self.game, cols=8, orientation="lr-bt")
         board.create_board()
         layout.add_widget(board)
         layout.add_widget(InfoWidget(self.game))
