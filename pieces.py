@@ -52,7 +52,7 @@ class Piece:
     def __repr__(self):
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
-    def possibleMove(self) -> list[Move]:
+    def possibleMoves(self) -> list[Move]:
         raise NotImplementedError("abstract method")
 
 
@@ -66,6 +66,26 @@ class Man(Piece):
             return "\u2B24"
         else:
             return "\u25CB"
+
+    def possibleMoves(self) -> list[Move]:
+        moves = []
+        if self.color == Color.WHITE:
+            move = []
+            row = self.position.row+1
+            column = self.position.column+1
+            if self.board.field_exists(row, column):
+                if self.board.is_field_occupied(row, column):
+                    if self.board.get_field(row, column).color == Color.BLACK:
+                        # zkontroluj pozici za ním
+                        if not self.board.is_field_occupied(row+1, column+1):
+                            # přidej braní do tahu, musí se uložit i figurka kterou přeskakuje?
+                            ...
+                            # jsi v braní, podívej se jestli můžeš brát dál, rekurze
+                else:
+                    # pole je volné, je přidáno do seznamu tahů
+                    ...
+
+
 
 
 class King(Piece):

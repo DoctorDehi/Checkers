@@ -5,11 +5,10 @@ from pieces import Man, King, Position, Color
 
 
 class Game:
-    BOARD_SIZE = 8
-    PIECES_PER_PLAYER = 12
+    board_size = 8
 
     def __init__(self):
-        self.board = Board()
+        self.board = Board(Game.board_size)
         self.player_white = Player(Color.WHITE)
         self.player_black = Player(Color.BLACK)
 
