@@ -167,18 +167,18 @@ class King(Piece):
 
     def _check_for_move(self, next_positions, r, step, column, last, captured, direction) -> (PositionNode, bool):
         """
-            Returns next PositionNode with possible child nodes, last and boolean that says, if loop should break
+            Returns next list of PositionNodes with possible child nodes, last and boolean that says, if loop should break
         """
         current = self.board.get_field(r, column)
         if current == 1:
             position = Position(r, column)
             print(position)
+            if str(position) == "C3":
+                print(last, captured)
             if captured and not last:
                 return next_positions, last, False
-            if last:
-                captured.append(last)
 
-            next_position = PositionNode(position, captured_pieces=captured)
+            next_position = PositionNode(position, captured_pieces=captured + last)
 
             next_positions.append(next_position)
 
