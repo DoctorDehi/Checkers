@@ -26,7 +26,7 @@ class Board:
             print(*print_list)
 
     def field_exists(self, row, column):
-        return 0 <= row <= self.size and 0 <= column <= self.size
+        return 0 <= row < self.size and 0 <= column < self.size
 
     def is_field_placeable(self, row, column):
         return self._board[row][column] == 1
@@ -41,7 +41,7 @@ class Board:
             return None
 
     def get_field_by_position(self, position: Position):
-        self.get_field(position.row, position.column)
+        return self.get_field(position.row, position.column)
 
     def get_board(self):
         return self._board

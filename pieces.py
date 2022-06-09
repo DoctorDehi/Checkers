@@ -32,42 +32,26 @@ class Piece:
     def __repr__(self):
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
-    def get_valid_moves(self) -> MoveTree:
-        raise NotImplementedError("abstract method")
+    def _gen_vector(self, direction_x, direction_y, start):
+        positions = []
+        position = start
+        row = position.row + direction_x
+        column = position.column + direction_y
 
-    def _check_for_move(self, next_position, r, step, column, last, captured) -> (PositionNode, list, bool):
-        raise NotImplementedError("abstract method")
-
-    def _search_left_moves(self, start, stop, step, left, direction, captured=None) -> PositionNode:
-        if not captured:
-            captured = []
-        next_positions = []
-        last = []
-        for r in range(start, stop, step):
-            if left < 0:
-                break
-            next_positions, last, should_break = self._check_for_move(next_positions, r, step, left, last, captured, direction)
-            if should_break:
-                break
-            left -= 1
-        return next_positions
-
-    def _search_right_moves(self, start, stop, step, right, direction, captured=None) -> PositionNode:
-        if not captured:
-            captured = []
-        next_positions = []
-        last = []
-        for r in range(start, stop, step):
-            if right >= self.board.get_size():
-                break
-            next_positions, last, should_break = self._check_for_move(next_positions, r, step, right, last, captured, direction)
-            if should_break:
-                break
-            right += 1
-        return next_positions
+        while 0 <= row < self.board.get_size() and 0 <= column < self.board.get_size():
+            position = Position(row, column)
+            positions.append(position)
+            row = position.row + direction_x
+            column = position.column + direction_y
+        return positions
 
 
 class Man(Piece):
+    directions = {
+        Color.WHITE: ([1, 1], [1, -1]),
+        Color.BLACK: ([-1, 1], [-1, -1])
+    }
+
     def __init__(self, color: Color, position: Position, board: Board):
         super().__init__(color, position, board)
 
@@ -77,6 +61,46 @@ class Man(Piece):
             return "\u2B24"
         else:
             return "\u25CB"
+
+    def get_possible_moves(self):
+        move_tree = MoveTree()
+        root = PositionNode(self.position)
+        move_tree.add(root)
+
+        for direction in self.directions[self.color]:
+            root.add_descendants(self._search_in_vector(
+                self._gen_vector(direction[0], direction[1], self.position), direction)
+            )
+        return move_tree
+
+    def _search_in_vector(self, vector, current_direction, captured=None):
+        position_nodes = []
+        last_piece = None
+        for position in vector:
+            print(position)
+            piece = self.board.get_field_by_position(position)
+            if piece == 1:
+                if not last_piece and not captured:
+                    position_node = PositionNode(position)
+                    position_nodes.append(position_node)
+                    break
+                if last_piece:
+                    position_node = PositionNode(position, [last_piece] + [captured])
+                    position_nodes.append(position_node)
+
+                    for direction in self.directions[self.color]:
+                        if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:
+                            position_node.add_descendants(self._search_in_vector(
+                                self._gen_vector(direction[0], direction[1], position), direction, last_piece)
+                            )
+
+            elif piece.color == self.color:
+                break
+            elif last_piece:
+                break
+            else:
+                last_piece = piece
+        return position_nodes
 
     def get_valid_moves(self) -> MoveTree:
         move_tree = MoveTree()
@@ -136,8 +160,40 @@ class Man(Piece):
             last = [current]
             return next_positions, last, False
 
+    def _search_left_moves(self, start, stop, step, left, direction, captured=None) -> PositionNode:
+        if not captured:
+            captured = []
+        next_positions = []
+        last = []
+        for r in range(start, stop, step):
+            if left < 0:
+                break
+            next_positions, last, should_break = self._check_for_move(
+                next_positions, r, step, left, last, captured, direction)
+            if should_break:
+                break
+            left -= 1
+        return next_positions
+
+    def _search_right_moves(self, start, stop, step, right, direction, captured=None) -> PositionNode:
+        if not captured:
+            captured = []
+        next_positions = []
+        last = []
+        for r in range(start, stop, step):
+            if right >= self.board.get_size():
+                break
+            next_positions, last, should_break = self._check_for_move(
+                next_positions, r, step, right, last, captured, direction)
+            if should_break:
+                break
+            right += 1
+        return next_positions
+
 
 class King(Piece):
+    directions = ([1, 1], [1, -1], [-1, 1], [-1, -1])
+
     def __init__(self, color: Color, position: Position, board: Board):
         super().__init__(color, position, board)
 
@@ -148,68 +204,42 @@ class King(Piece):
         else:
             return "\u29BE"
 
-    def get_valid_moves(self) -> MoveTree:
+    def get_possible_moves(self):
         move_tree = MoveTree()
         root = PositionNode(self.position)
         move_tree.add(root)
 
-        left = self.position.column - 1
-        right = self.position.column + 1
-        row = self.position.row
-        board_size = self.board.get_size()
-
-        move_tree.add_nodes(self._search_left_moves(row - 1, -1, -1, left, direction="dl"))
-        move_tree.add_nodes(self._search_right_moves(row - 1, -1, -1, right, direction="dr"))
-        move_tree.add_nodes(self._search_left_moves(row + 1, board_size, 1, left, direction="ul"))
-        move_tree.add_nodes(self._search_right_moves(row + 1, board_size, 1, right, direction="ur"))
-
+        for direction in self.directions:
+            root.add_descendants(self._search_in_vector(
+                self._gen_vector(direction[0], direction[1], self.position), direction)
+            )
         return move_tree
 
-    def _check_for_move(self, next_positions, r, step, column, last, captured, direction) -> (PositionNode, bool):
-        """
-            Returns next list of PositionNodes with possible child nodes, last and boolean that says, if loop should break
-        """
-        current = self.board.get_field(r, column)
-        if current == 1:
-            position = Position(r, column)
+    def _search_in_vector(self, vector, current_direction, captured=None):
+        position_nodes = []
+        last_piece = None
+        for position in vector:
             print(position)
-            if str(position) == "C3":
-                print(last, captured)
-            if captured and not last:
-                return next_positions, last, False
+            piece = self.board.get_field_by_position(position)
+            if piece == 1:
+                if not last_piece and not captured:
+                    position_node = PositionNode(position)
+                    position_nodes.append(position_node)
+                if last_piece:
+                    position_node = PositionNode(position, [last_piece] + [captured])
+                    position_nodes.append(position_node)
 
-            next_position = PositionNode(position, captured_pieces=captured + last)
+                    for direction in self.directions:
+                        if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:
+                            position_node.add_descendants(self._search_in_vector(
+                                self._gen_vector(direction[0], direction[1], position), direction, last_piece)
+                            )
 
-            next_positions.append(next_position)
-
-            if last:
-                if direction != "dr":
-                    next_position.add_descendants(
-                        self._search_left_moves(r + step, self.board.get_size(), step, column - 1, captured=last, direction="ul")
-                    )
-                if direction != "dl":
-                    next_position.add_descendants(
-                        self._search_right_moves(r + step, self.board.get_size(), step, column + 1, captured=last, direction="ur")
-                    )
-                if direction != "ur":
-                    next_position.add_descendants(
-                        self._search_left_moves(r - step, 0, -step, column - 1, captured=last, direction="dl")
-                    )
-                if direction != "ul":
-                    next_position.add_descendants(
-                        self._search_right_moves(r - step, 0, -step, column + 1, captured=last, direction="dr")
-                    )
-
-            return next_positions, last, False
-        # if there are two pieces without blank field
-        elif last:
-            return next_positions, last, True
-        elif current.color == self.color:
-            return next_positions, last, True
-        # last is assigned only if there is opponent's piece
-        else:
-            last = [current]
-            return next_positions, last, False
+            elif piece.color == self.color:
+                break
+            else:
+                last_piece = piece
+        return position_nodes
 
 
 if __name__ == '__main__':
