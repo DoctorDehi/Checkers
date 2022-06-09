@@ -32,8 +32,39 @@ class Piece:
     def __repr__(self):
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
-    def possibleMove(self) -> list[Move]:
+    def get_valid_moves(self) -> MoveTree:
         raise NotImplementedError("abstract method")
+
+    def _check_for_move(self, next_position, r, step, column, last, captured) -> (PositionNode, list, bool):
+        raise NotImplementedError("abstract method")
+
+    def _search_left_moves(self, start, stop, step, left, direction, captured=None) -> PositionNode:
+        if not captured:
+            captured = []
+        next_positions = []
+        last = []
+        for r in range(start, stop, step):
+            if left < 0:
+                break
+            next_positions, last, should_break = self._check_for_move(next_positions, r, step, left, last, captured, direction)
+            if should_break:
+                break
+            left -= 1
+        return next_positions
+
+    def _search_right_moves(self, start, stop, step, right, direction, captured=None) -> PositionNode:
+        if not captured:
+            captured = []
+        next_positions = []
+        last = []
+        for r in range(start, stop, step):
+            if right >= self.board.get_size():
+                break
+            next_positions, last, should_break = self._check_for_move(next_positions, r, step, right, last, captured, direction)
+            if should_break:
+                break
+            right += 1
+        return next_positions
 
 
 class Man(Piece):
@@ -47,7 +78,7 @@ class Man(Piece):
         else:
             return "\u25CB"
 
-    def get_valid_moves(self):
+    def get_valid_moves(self) -> MoveTree:
         move_tree = MoveTree()
         root = PositionNode(self.position)
         move_tree.add(root)
@@ -57,125 +88,53 @@ class Man(Piece):
         row = self.position.row
 
         if self.color == Color.BLACK:
-            move_tree.add(self._search_left_moves(row - 1, max(row - 3, -1), -1, self.color, left))
-            move_tree.add(self._search_right_moves(row - 1, max(row - 3, -1), -1, self.color, right))
+            move_tree.add_nodes(self._search_left_moves(row - 1, max(row - 3, -1), -1, left, direction="dl"))
+            move_tree.add_nodes(self._search_right_moves(row - 1, max(row - 3, -1), -1, right, direction="dr"))
 
         elif self.color == Color.WHITE:
             board_size = self.board.get_size()
-            move_tree.add(self._search_left_moves(row + 1, min(row + 3, board_size), 1, self.color, left))
-            move_tree.add(self._search_right_moves(row + 1, min(row + 3, board_size), 1, self.color, right))
+            move_tree.add_nodes(self._search_left_moves(row + 1, min(row + 3, board_size), 1, left, direction="ul"))
+            move_tree.add_nodes(self._search_right_moves(row + 1, min(row + 3, board_size), 1, right, direction="ur"))
 
         return move_tree
 
-    def _search_left_moves(self, start, stop, step, color, left, skipped=None):
-        if not skipped:
-            skipped = []
-        next_position = None
-
-        last = []
-        for r in range(start, stop, step):
-            if left < 0:
-                break
-
-            current = self.board.get_field(r, left)
-            if not current:
-                continue
-            elif current == 1:
-                position = Position(r, left)
-
-                if skipped and not last:
-                    break
-                elif skipped:
-                    next_position = PositionNode(position, captured_pieces=last + skipped)
-                else:
-                    next_position = PositionNode(position, captured_pieces=last)
-
-                if last:
-                    if step == -1:
-                        row = max(r - 3, 0)
-                    else:
-                        row = min(r + 3, self.board.get_size())
-                    next_position.add_descendant(
-                        self._search_left_moves(r + step, row, step, color, left - 1, skipped=last)
-                    )
-                    next_position.add_descendant(
-                        self._search_right_moves(r + step, row, step, color, left + 1, skipped=last)
-                    )
-                break
-            elif current.color == color:
-                break
+    def _check_for_move(self, next_positions, r, step, column, last, captured, direction) -> (PositionNode, list, bool):
+        """
+            Returns next PositionNode with possible child nodes, last and boolean that says, if loop should break
+        """
+        current = self.board.get_field(r, column)
+        if current == 1:
+            position = Position(r, column)
+            if captured and not last:
+                return next_positions, last, True
+            # else if captured and last
+            elif captured:
+                next_position = PositionNode(position, captured_pieces=last + captured)
+            # not captured
             else:
-                last = [current]
+                next_position = PositionNode(position, captured_pieces=last)
 
-            left -= 1
+            next_positions.append(next_position)
 
-        return next_position
-
-    def _search_right_moves(self, start, stop, step, color, right, skipped=None):
-        if not skipped:
-            skipped = []
-        next_position = None
-
-        last = []
-        for r in range(start, stop, step):
-            if right >= self.board.get_size():
-                break
-
-            current = self.board.get_field(r, right)
-            if not current:
-                continue
-            elif current == 1:
-                position = Position(r, right)
-                if skipped and not last:
-                    break
-                elif skipped:
-                    next_position = PositionNode(position, captured_pieces=last + skipped)
+            if last:
+                if step == -1:
+                    row = max(r - 3, 0)
+                    dv = "d"
                 else:
-                    next_position = PositionNode(position, captured_pieces=last)
-
-                if last:
-                    if step == -1:
-                        row = max(r - 3, 0)
-                    else:
-                        row = min(r + 3, self.board.get_size())
-                    next_position.add_descendant(
-                        self._search_left_moves(r + step, row, step, color, right - 1, skipped=last)
-                    )
-                    next_position.add_descendant(
-                        self._search_right_moves(r + step, row, step, color, right + 1, skipped=last)
-                    )
-                break
-            elif current.color == color:
-                break
-            else:
-                last = [current]
-
-            right += 1
-
-        return next_position
-
-    def possibleMove(self) -> list[Move]:
-        moves = []
-        if self.color == Color.WHITE:
-            increment = 1
+                    row = min(r + 3, self.board.get_size())
+                    dv = "u"
+                next_position.add_descendants(
+                    self._search_left_moves(r + step, row, step, column - 1, captured=last, direction=dv + "l")
+                )
+                next_position.add_descendants(
+                    self._search_right_moves(r + step, row, step, column + 1, captured=last, direction=dv + "l")
+                )
+            return next_positions, last, True
+        elif current.color == self.color:
+            return next_positions, last, True
         else:
-            increment = -1
-        move = []
-        row = self.position.row + increment
-        column = self.position.column + 1
-        if self.board.field_exists(row, column):
-            if self.board.is_field_occupied(row, column):
-                if self.board.get_field(row, column).color != self.color:
-                    # zkontroluj pozici za ním
-                    if not self.board.is_field_occupied(row + increment, column + 1):
-                        # přidej braní do tahu, musí se uložit i figurka kterou přeskakuje?
-                        ...
-                        # jsi v braní, podívej se jestli můžeš brát dál, rekurze
-            else:
-                # pole je volné, je přidáno do seznamu tahů
-                ...
-
-        return moves
+            last = [current]
+            return next_positions, last, False
 
 
 class King(Piece):
@@ -188,6 +147,69 @@ class King(Piece):
             return "\u29BF"
         else:
             return "\u29BE"
+
+    def get_valid_moves(self) -> MoveTree:
+        move_tree = MoveTree()
+        root = PositionNode(self.position)
+        move_tree.add(root)
+
+        left = self.position.column - 1
+        right = self.position.column + 1
+        row = self.position.row
+        board_size = self.board.get_size()
+
+        move_tree.add_nodes(self._search_left_moves(row - 1, -1, -1, left, direction="dl"))
+        move_tree.add_nodes(self._search_right_moves(row - 1, -1, -1, right, direction="dr"))
+        move_tree.add_nodes(self._search_left_moves(row + 1, board_size, 1, left, direction="ul"))
+        move_tree.add_nodes(self._search_right_moves(row + 1, board_size, 1, right, direction="ur"))
+
+        return move_tree
+
+    def _check_for_move(self, next_positions, r, step, column, last, captured, direction) -> (PositionNode, bool):
+        """
+            Returns next PositionNode with possible child nodes, last and boolean that says, if loop should break
+        """
+        current = self.board.get_field(r, column)
+        if current == 1:
+            position = Position(r, column)
+            print(position)
+            if captured and not last:
+                return next_positions, last, False
+            if last:
+                captured.append(last)
+
+            next_position = PositionNode(position, captured_pieces=captured)
+
+            next_positions.append(next_position)
+
+            if last:
+                if direction != "dr":
+                    next_position.add_descendants(
+                        self._search_left_moves(r + step, self.board.get_size(), step, column - 1, captured=last, direction="ul")
+                    )
+                if direction != "dl":
+                    next_position.add_descendants(
+                        self._search_right_moves(r + step, self.board.get_size(), step, column + 1, captured=last, direction="ur")
+                    )
+                if direction != "ur":
+                    next_position.add_descendants(
+                        self._search_left_moves(r - step, 0, -step, column - 1, captured=last, direction="dl")
+                    )
+                if direction != "ul":
+                    next_position.add_descendants(
+                        self._search_right_moves(r - step, 0, -step, column + 1, captured=last, direction="dr")
+                    )
+
+            return next_positions, last, False
+        # if there are two pieces without blank field
+        elif last:
+            return next_positions, last, True
+        elif current.color == self.color:
+            return next_positions, last, True
+        # last is assigned only if there is opponent's piece
+        else:
+            last = [current]
+            return next_positions, last, False
 
 
 if __name__ == '__main__':

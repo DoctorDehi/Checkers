@@ -52,7 +52,6 @@ class Square(Button):
         self.parent.game.player_white.add_piece(
             Man(PieceColor.WHITE, Position(self.row, self.column), self.parent.game.board)
         )
-        print(self.parent.game.board.get_board())
         self.parent.draw_board()
 
     def notation(self):
@@ -79,7 +78,6 @@ class BoardWidget(GridLayout):
                 irow.append(square)
                 self.add_widget(square)
             self.squares.append(irow)
-        print(self.squares)
 
     def draw_board(self):
         for piece in self.game.player_white.pieces:
