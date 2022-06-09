@@ -74,10 +74,12 @@ class Man(Piece):
         return move_tree
 
     def _search_in_vector(self, vector, current_direction, captured=None):
+        if not captured:
+            captured = []
         position_nodes = []
         last_piece = None
         for position in vector:
-            print(position)
+            print(position, captured)
             piece = self.board.get_field_by_position(position)
             if piece == 1:
                 if not last_piece and not captured:
@@ -85,13 +87,14 @@ class Man(Piece):
                     position_nodes.append(position_node)
                     break
                 if last_piece:
-                    position_node = PositionNode(position, [last_piece] + [captured])
+                    position_node = PositionNode(position, [last_piece] + captured)
                     position_nodes.append(position_node)
 
                     for direction in self.directions[self.color]:
                         if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:
                             position_node.add_descendants(self._search_in_vector(
-                                self._gen_vector(direction[0], direction[1], position), direction, last_piece)
+                                self._gen_vector(direction[0], direction[1], position),
+                                direction, captured + [last_piece])
                             )
 
             elif piece.color == self.color:
@@ -128,23 +131,28 @@ class King(Piece):
         return move_tree
 
     def _search_in_vector(self, vector, current_direction, captured=None):
+        if not captured:
+            captured = []
         position_nodes = []
         last_piece = None
         for position in vector:
-            print(position)
+            print(position, captured)
             piece = self.board.get_field_by_position(position)
             if piece == 1:
                 if not last_piece and not captured:
                     position_node = PositionNode(position)
                     position_nodes.append(position_node)
                 if last_piece:
+                    if last_piece in captured:
+                        break
                     position_node = PositionNode(position, [last_piece] + [captured])
                     position_nodes.append(position_node)
 
                     for direction in self.directions:
                         if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:
                             position_node.add_descendants(self._search_in_vector(
-                                self._gen_vector(direction[0], direction[1], position), direction, last_piece)
+                                self._gen_vector(direction[0], direction[1], position),
+                                direction, captured + [last_piece])
                             )
 
             elif piece.color == self.color:
