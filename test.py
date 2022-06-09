@@ -17,7 +17,6 @@ from game import Game
 g = Game()
 g.load_game_from_CSV("saves/tahy1.csv")
 print(g.player_white.pieces[1].get_possible_moves())
-print(g.player_white.pieces[1].get_valid_moves())
 # print(g.player_white.pieces[0].get_valid_moves())
 # print(g.player_white.pieces)
 # print(g.player_black.pieces)
