@@ -50,13 +50,23 @@ class MoveTree:
                 if path_to_node:
                     return Move([self.root.position] + path_to_node)
 
+    def has_capturing_nodes(self):
+        if self.root:
+            if self.root.capturing_nodes:
+                return True
+        return False
+
     def get_end_nodes(self):
         if self.root:
-            end_positions = []
-            for next_position in self.root.next_positions:
-                end_positions = next_position.get_end_nodes(end_positions)
+            return self.root.get_end_nodes([])
+        else:
+            return []
 
-        return end_positions
+    def get_valid_end_nodes(self):
+        if self.root:
+            return self.root.get_valid_end_nodes([])
+        else:
+            return []
 
     def __repr__(self):
         if self.root:
@@ -70,10 +80,13 @@ class PositionNode:
         self.position = position
         self.captured_pieces = captured_pieces
         self.next_positions = []
+        self.capturing_nodes = []
 
     def add_descendant(self, node):
         if isinstance(node, PositionNode):
             self.next_positions.append(node)
+            if node.captured_pieces:
+                self.capturing_nodes.append(node)
 
     def add_descendants(self, nodes):
         for node in nodes:
@@ -103,6 +116,27 @@ class PositionNode:
                 end_positions = next_position.get_end_nodes(end_positions)
         else:
             end_positions.append(self)
+        return end_positions
+
+    def grandson_capturing(self):
+        if self.capturing_nodes:
+            for node in self.capturing_nodes:
+                if node.capturing_nodes:
+                    return True
+        else:
+            False
+
+    def get_valid_end_nodes(self, end_positions):
+        if self.grandson_capturing():
+            for next_position in self.capturing_nodes:
+                if next_position.next_positions:
+                    end_positions = next_position.get_valid_end_nodes(end_positions)
+        elif self.next_positions:
+            for next_position in self.next_positions:
+                end_positions = next_position.get_valid_end_nodes(end_positions)
+        else:
+            end_positions.append(self)
+
         return end_positions
 
     def get_next_positions(self):

@@ -135,11 +135,13 @@ class King(Piece):
             move_tree = self.get_possible_moves()
 
         end_nodes = move_tree.get_end_nodes()
+        print(end_nodes)
+        print(move_tree.get_valid_end_nodes())
         moves = []
         for node in end_nodes:
             if node.captured_pieces:
                 # check somehow if there is a capturing move, select only complete moves
-                print(node.position, node.captured_pieces)
+                #print(node.position, node.captured_pieces)
                 moves.append(move_tree.to_move(node))
         ...
 
@@ -181,8 +183,10 @@ class King(Piece):
                                 self._gen_vector(direction[0], direction[1], position),
                                 direction, captured + [last_piece])
                             )
-            elif piece.color == self.color:
+            # its own piece or there is already captured piece
+            elif piece.color == self.color or last_piece:
                 break
+            # it's opponent's piece, potential jump
             else:
                 last_piece = piece
         return position_nodes
