@@ -16,6 +16,22 @@ class Move:
     def get_vertices(self):
         return [self.start] + self.turnovers + [self.stop]
 
+    def get_jump_positions(self):
+        return self.turnovers + [self.stop]
+
+    def __iter__(self):
+        self.current = -1
+        return self
+
+    def __next__(self):
+        self.current += 1
+        if self.current < len(self.turnovers):
+            return self.turnovers[self.current]
+        elif self.current == len(self.turnovers):
+            return self.stop
+        else:
+            raise StopIteration
+
     def __repr__(self):
         return str(self.get_vertices())
 

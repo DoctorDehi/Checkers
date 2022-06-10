@@ -59,6 +59,7 @@ class Board:
         if self.is_field_placeable(new_row, new_column):
             self._board[new_row][new_column] = piece
             self._board[piece.position.row][piece.position.column] = 1
+            piece.position = Position(new_row, new_column)
         else:
             print("The field piece should be moved to is not placeble!")
 

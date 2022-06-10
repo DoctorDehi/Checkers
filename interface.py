@@ -1,12 +1,15 @@
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.graphics import Color, Rectangle, Ellipse
+from kivy.graphics import Color, Rectangle, Ellipse, Line
 from kivy.properties import OptionProperty, BooleanProperty
 
 from enum import Enum
+import time
+
 
 from pieces import Man, King, Position
 from pieces import Color as PieceColor
@@ -38,14 +41,22 @@ class Square(Button):
                 Color(0.35, 0.2, 0.12)
             Rectangle(pos=self.pos, size=self.size)
 
-            if self.piece in ["Black", "BlackK"]:
-                Color(0, 0, 0)
-            else:
-                Color(1, 1, 1)
-
             if self.piece != "None":
+
+                if self.piece in ["Black", "BlackK"]:
+                    Color(0, 0, 0)
+                else:
+                    Color(1, 1, 1)
+
                 Ellipse(pos=(self.x + self.width // 6, self.y + self.height // 6),
                         size=(2 * self.width // 3, 2 * self.height // 3))
+
+                if self.piece in ["BlackK", "WhiteK"]:
+                    Color(0.45, 0.45, 0.45)
+
+                    Line(pos=(self.x + self.width // 6, self.y + self.height // 6),
+                         ellipse=(self.x + self.width // 3, self.y + self.height // 3, self.width//3, self.height//3),
+                         width=1.5)
 
     def on_press(self):
         self.piece = "White"
@@ -80,19 +91,32 @@ class BoardWidget(GridLayout):
             self.squares.append(irow)
 
     def draw_board(self):
-        for piece in self.game.player_white.pieces:
-            if isinstance(piece, Man):
-                color = "White"
-            else:
-                color = "WhiteK"
-            self.squares[piece.position.row][piece.position.column].piece = color
+        board_size = self.game.board.get_size()
+        for row in range(board_size):
+            for column in range(board_size):
+                piece = self.game.board.get_field(row, column)
+                if piece == 0 or piece == 1:
+                    color = "None"
+                elif piece in self.game.player_white.pieces:
+                    if isinstance(piece, Man):
+                        color = "White"
+                    else:
+                        color = "WhiteK"
+                else:
+                    if isinstance(piece, Man):
+                        color = "Black"
+                    else:
+                        color = "BlackK"
 
-        for piece in self.game.player_black.pieces:
-            if isinstance(piece, Man):
-                color = "Black"
-            else:
-                color = "BlackK"
-            self.squares[piece.position.row][piece.position.column].piece = color
+                self.squares[row][column].piece = color
+                self.squares[row][column].canvas.ask_update()
+
+    def on_touch_down(self, touch):
+        moves = self.game.player_white.get_valid_moves()
+        next_move = next(iter(moves.values()))[0]
+        for position in self.game.make_move_gen(next_move):
+            self.draw_board()
+            self.parent.reset_context()
 
 
 class InfoWidget(GridLayout):

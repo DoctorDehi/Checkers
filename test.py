@@ -16,9 +16,15 @@ from game import Game
 #
 g = Game()
 g.load_game_from_CSV("saves/tahy4.csv")
-
+g.board.nice_print()
 moves = g.player_white.get_valid_moves()
+piece = g.player_white.pieces[0]
 print(moves)
+move = moves[piece][0]
+print(g.player_white.get_valid_next_positions(piece))
+for i in g.make_move_gen(move):
+    g.board.nice_print()
+
 
 
 # node = move_tree.root.get_next_positions()[0].get_next_positions()[1]

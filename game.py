@@ -2,6 +2,7 @@ import csv
 
 from board import Board
 from pieces import Man, King, Position, Color
+from moves import Move
 
 
 class Game:
@@ -11,6 +12,7 @@ class Game:
         self.board = Board(Game.board_size)
         self.player_white = Player(Color.WHITE)
         self.player_black = Player(Color.BLACK)
+        self.moves_counter = 0
 
     def create_new_game(self):
         self.load_game_from_CSV('new_game.csv')
@@ -33,12 +35,39 @@ class Game:
         except Exception as e:
             raise Exception("Error while loading CSV: " + str(e))
 
+    def make_move(self, move: Move):
+        piece = self.board.get_field_by_position(move.start)
+        for position in move:
+            self.board.move_piece(piece, position.row, position.column)
+            self.board.nice_print()
+        for piece in move.captured_pieces:
+            self.board.remove_piece(piece)
+        self.board.nice_print()
+
+    def make_partial_move(self, piece, position):
+        self.board.move_piece(piece, position.row, position.column)
+        self.board.nice_print()
+
+    def end_move(self, move: Move):
+        ...
+
+    def make_move_gen(self, move: Move):
+        piece = self.board.get_field_by_position(move.start)
+        for position in move:
+            self.board.move_piece(piece, position.row, position.column)
+            yield
+        for piece in move.captured_pieces:
+            self.board.remove_piece(piece)
+            yield
+
 
 class Player:
     def __init__(self, color: Color):
         self.color = color
         self.pieces = []
         self.score = 0
+        captured_pieces = []
+        self.valid_moves = None
 
     def add_piece(self, piece):
         if piece not in self.pieces:
@@ -65,19 +94,52 @@ class Player:
             if king_capturing and isinstance(piece, Man):
                 break
             valid_moves = piece.get_valid_moves()
-
-            if valid_moves and valid_moves[0].captured_pieces:
-                if isinstance(piece, King):
-                    if not king_capturing:
-                        king_capturing = True
+            if valid_moves:
+                if valid_moves[0].captured_pieces:
+                    if isinstance(piece, King):
+                        if not king_capturing:
+                            king_capturing = True
+                    else:
+                        if not man_capturing:
+                            man_capturing = True
                 else:
-                    if not man_capturing:
-                        man_capturing = True
-            else:
-                if king_capturing or man_capturing:
-                    continue
-            moves[piece] = valid_moves
+                    if king_capturing or man_capturing:
+                        continue
+                moves[piece] = valid_moves
+
+        self.valid_moves = moves
         return moves
+
+    def get_current_valid_moves(self, piece, jumped_positions=[]):
+        moves = []
+        for move in self.valid_moves[piece]:
+            if jumped_positions:
+                sep = len(jumped_positions) - 1
+                if str(move.get_jump_positions()[:sep]) == str(jumped_positions):
+                    moves.append(move)
+            else:
+                moves.append(move)
+
+        self.valid_moves = {piece: moves}
+        return moves
+
+    def get_valid_next_positions(self, piece, jumped_positions=None):
+        next_positions = []
+        for move in self.valid_moves[piece]:
+            next_positions.append(move.get_jump_positions()[len(jumped_positions)])
+        return next_positions
+
+    def get_move_from_positions(self, piece, positions):
+        for move in self.valid_moves[piece]:
+            if str(move.get_jump_positions()) == str(positions):
+                return move
+
+    def get_valid_first_jumps(self):
+        positions = []
+        for piece in self.valid_moves.keys():
+            for move in self.valid_moves[piece]:
+                positions.append(move.start)
+        return positions
 
     # korunuj kamen na damu
     def coronate_piece(self, piece):
