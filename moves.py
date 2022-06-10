@@ -60,6 +60,12 @@ class MoveTree:
         else:
             return []
 
+    def get_valid_moves(self):
+        moves = []
+        for node in self.get_valid_end_nodes():
+            moves.append(self.to_move(node))
+        return moves
+
     def get_valid_end_nodes(self):
         if self.has_capturing_nodes():
             return self.root.get_valid_end_nodes([])

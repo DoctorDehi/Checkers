@@ -15,13 +15,15 @@ from game import Game
 #
 #
 g = Game()
-g.load_game_from_CSV("saves/tahy4.csv")
+g.load_game_from_CSV("saves/tahy1.csv")
 move_tree = g.player_white.pieces[0].get_possible_moves()
-print(g.player_white.pieces[0].get_valid_moves(move_tree))
+moves = g.player_white.pieces[0].get_valid_moves(move_tree)
+print(moves)
+
 print(move_tree)
 
 
-node = move_tree.root.get_next_positions()[0].get_next_positions()[1]
+# node = move_tree.root.get_next_positions()[0].get_next_positions()[1]
 # end_nodes = move_tree.get_end_nodes()
 # for i in end_nodes:
 #     print(i.captured_pieces)

@@ -23,6 +23,11 @@ class Piece:
     def __repr__(self):
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
+    def get_valid_moves(self, move_tree=None):
+        if not move_tree:
+            move_tree = self.get_possible_moves()
+        return move_tree.get_valid_moves()
+
     def get_possible_moves(self) -> MoveTree:
         raise NotImplementedError("abstract method")
 
@@ -60,7 +65,7 @@ class Man(Piece):
         else:
             return "\u25CB"
 
-    def get_valid_moves(self, move_tree=None):
+    def get_valid_moves_old(self, move_tree=None):
         if not move_tree:
             move_tree = self.get_possible_moves()
 
@@ -129,23 +134,6 @@ class King(Piece):
             return "\u29BF"
         else:
             return "\u29BE"
-
-    def get_valid_moves(self, move_tree=None):
-        if not move_tree:
-            move_tree = self.get_possible_moves()
-
-        end_nodes = move_tree.get_end_nodes()
-        print(end_nodes)
-        print(move_tree.get_valid_end_nodes())
-        moves = []
-        for node in end_nodes:
-            if node.captured_pieces:
-                # check somehow if there is a capturing move, select only complete moves
-                #print(node.position, node.captured_pieces)
-                moves.append(move_tree.to_move(node))
-        ...
-
-        return moves
 
     def get_possible_moves(self):
         move_tree = MoveTree()
