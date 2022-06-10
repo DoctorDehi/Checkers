@@ -65,17 +65,6 @@ class Man(Piece):
         else:
             return "\u25CB"
 
-    def get_valid_moves_old(self, move_tree=None):
-        if not move_tree:
-            move_tree = self.get_possible_moves()
-
-        end_nodes = move_tree.get_end_nodes()
-        for node in end_nodes:
-            # je zde braní?
-            #  pokud ano vyfiltruj pouze kompletní tahy s braním
-            # vygeneruj list tahů
-            ...
-
     def get_possible_moves(self):
         move_tree = MoveTree()
         root = PositionNode(self.position)
