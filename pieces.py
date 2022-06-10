@@ -45,8 +45,8 @@ class Piece:
 
 class Man(Piece):
     directions = {
-        Color.WHITE: ([1, 1], [1, -1]),
-        Color.BLACK: ([-1, 1], [-1, -1])
+        Color.WHITE: ((1, 1), (1, -1)),
+        Color.BLACK: ((-1, 1), (-1, -1))
     }
 
     def __init__(self, color: Color, position: Position, board: Board):
@@ -94,11 +94,11 @@ class Man(Piece):
             if piece == 1:
                 if not last_piece and not captured:
                     position_node = PositionNode(position)
-                    position_nodes.append(position_node)
+                    position_nodes.append([position_node, current_direction])
                     break
                 if last_piece:
                     position_node = PositionNode(position, [last_piece] + captured)
-                    position_nodes.append(position_node)
+                    position_nodes.append([position_node, current_direction])
 
                     for direction in self.directions[self.color]:
                         if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:
@@ -117,7 +117,7 @@ class Man(Piece):
 
 
 class King(Piece):
-    directions = ([1, 1], [1, -1], [-1, 1], [-1, -1])
+    directions = ((1, 1), (1, -1), (-1, 1), (-1, -1))
 
     def __init__(self, color: Color, position: Position, board: Board):
         super().__init__(color, position, board)
@@ -170,12 +170,12 @@ class King(Piece):
             if piece == 1:
                 if not last_piece and not captured:
                     position_node = PositionNode(position)
-                    position_nodes.append(position_node)
+                    position_nodes.append([position_node, current_direction])
                 if last_piece:
                     if last_piece in captured:
                         break
                     position_node = PositionNode(position, [last_piece] + captured)
-                    position_nodes.append(position_node)
+                    position_nodes.append([position_node, current_direction])
 
                     for direction in self.directions:
                         if current_direction[0] * -1 != direction[0] or current_direction[1] * -1 != direction[1]:

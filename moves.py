@@ -45,16 +45,14 @@ class MoveTree:
         if self.root is node:
             return Move(self.root.position)
         else:
-            for next_node in self.root.next_positions:
+            for next_node in self.root.next_positions_to_list():
                 path_to_node = next_node.to_move(node)
                 if path_to_node:
                     return Move([self.root.position] + path_to_node)
 
     def has_capturing_nodes(self):
         if self.root:
-            if self.root.capturing_nodes:
-                return True
-        return False
+            return self.root.has_capturing_nodes
 
     def get_end_nodes(self):
         if self.root:
@@ -63,10 +61,13 @@ class MoveTree:
             return []
 
     def get_valid_end_nodes(self):
-        if self.root:
+        if self.has_capturing_nodes():
             return self.root.get_valid_end_nodes([])
         else:
-            return []
+            if self.root:
+                return self.root.next_positions_to_list()
+            else:
+                return []
 
     def __repr__(self):
         if self.root:
@@ -79,25 +80,33 @@ class PositionNode:
     def __init__(self, position: Position, captured_pieces=None):
         self.position = position
         self.captured_pieces = captured_pieces
-        self.next_positions = []
-        self.capturing_nodes = []
+        self.has_descendants = False
+        self.has_capturing_nodes = False
+        self.next_positions = {
+            (1, 1): [],
+            (1, -1): [],
+            (-1, 1): [],
+            (-1, -1): [],
+        }
 
-    def add_descendant(self, node):
+    def add_descendant(self, node, direction):
         if isinstance(node, PositionNode):
-            self.next_positions.append(node)
-            if node.captured_pieces:
-                self.capturing_nodes.append(node)
+            self.next_positions[direction].append(node)
+            if not self.has_descendants:
+                self.has_descendants = True
+            if node.captured_pieces and not self.has_capturing_nodes:
+                self.has_capturing_nodes = True
 
     def add_descendants(self, nodes):
-        for node in nodes:
-            self.add_descendant(node)
+        for node, direction in nodes:
+            self.add_descendant(node, direction)
 
     def create_next_node(self, position, captured_pieces=None):
         self.add_descendant(PositionNode(position, captured_pieces))
 
     def to_list(self):
         node_list = [self.position]
-        for position in self.next_positions:
+        for position in self.next_positions_to_list():
             node_list.append(position.to_list())
         return node_list
 
@@ -105,46 +114,58 @@ class PositionNode:
         if self is node:
             return [self.position]
         else:
-            for next_node in self.next_positions:
+            for next_node in self.next_positions_to_list():
                 path_to_node = next_node.to_move(node)
                 if path_to_node:
                     return [self.position] + path_to_node
 
+    def next_positions_to_list(self):
+        positions = []
+        for direction in self.next_positions.keys():
+            positions.extend(self.next_positions[direction])
+        return positions
+
     def get_end_nodes(self, end_positions):
-        if self.next_positions:
-            for next_position in self.next_positions:
+        if self.next_positions_to_list():
+            for next_position in self.next_positions_to_list():
                 end_positions = next_position.get_end_nodes(end_positions)
         else:
             end_positions.append(self)
         return end_positions
 
-    def grandson_capturing(self):
-        if self.capturing_nodes:
-            for node in self.capturing_nodes:
-                if node.capturing_nodes:
+    def grandson_capturing(self, direction):
+        if self.has_capturing_nodes:
+            for node in self.next_positions[direction]:
+                if node.has_capturing_nodes:
                     return True
         else:
             False
 
     def get_valid_end_nodes(self, end_positions):
-        if self.grandson_capturing():
-            for next_position in self.capturing_nodes:
-                if next_position.next_positions:
-                    end_positions = next_position.get_valid_end_nodes(end_positions)
-        elif self.next_positions:
-            for next_position in self.next_positions:
-                end_positions = next_position.get_valid_end_nodes(end_positions)
-        else:
+        if not self.has_descendants:
             end_positions.append(self)
+            return end_positions
+        else:
+            for direction in self.next_positions.keys():
+                grandson_capturing = self.grandson_capturing(direction)
+                for node in self.next_positions[direction]:
+                    if grandson_capturing:
+                        if node.has_capturing_nodes:
+                            end_positions = node.get_valid_end_nodes(end_positions)
+                    elif self.has_capturing_nodes:
+                        if node.captured_pieces:
+                            end_positions = node.get_valid_end_nodes(end_positions)
+                    else:
+                        end_positions = node.get_valid_end_nodes(end_positions)
 
         return end_positions
 
     def get_next_positions(self):
-        return self.next_positions
+        return self.next_positions_to_list()
 
     def append_to_list(self, lst):
         lst.append(self.position)
-        for position in self.next_positions:
+        for position in self.next_positions_to_list():
             lst.append(position.append_to_list(lst))
 
     def __repr__(self):
@@ -152,6 +173,6 @@ class PositionNode:
             return repr(self.position)
         else:
             repr_str = repr(self.position) + "+"
-            for position in self.next_positions:
+            for position in self.next_positions_to_list():
                 repr_str = repr_str + ":" + repr(position)
             return repr_str
