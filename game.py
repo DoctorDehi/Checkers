@@ -1,4 +1,5 @@
 import csv
+import random
 
 from board import Board
 from pieces import Man, King, Position, Color
@@ -13,6 +14,7 @@ class Game:
         self.player_white = Player(Color.WHITE)
         self.player_black = Player(Color.BLACK)
         self.moves_counter = 0
+        self.current_player = self.player_white
 
     def create_new_game(self):
         self.load_game_from_CSV('new_game.csv')
@@ -35,21 +37,37 @@ class Game:
         except Exception as e:
             raise Exception("Error while loading CSV: " + str(e))
 
+    def switch_player(self):
+        if self.current_player == self.player_white:
+            self.current_player = self.player_black
+        else:
+            self.current_player = self.player_white
+
     def make_move(self, move: Move):
         piece = self.board.get_field_by_position(move.start)
         for position in move:
             self.board.move_piece(piece, position.row, position.column)
             self.board.nice_print()
-        for piece in move.captured_pieces:
-            self.board.remove_piece(piece)
+        self.end_move(piece, move)
         self.board.nice_print()
 
     def make_partial_move(self, piece, position):
         self.board.move_piece(piece, position.row, position.column)
         self.board.nice_print()
 
-    def end_move(self, move: Move):
-        ...
+    def end_move(self, piece, move: Move):
+        if move.captured_pieces:
+            for piece in move.captured_pieces:
+                self.board.remove_piece(piece)
+                self.current_player.remove_piece(piece)
+                self.current_player.score += 1
+        # transform to king
+        if move.stop.row == 0 and piece.color == Color.BLACK and isinstance(piece, Man):
+            piece = piece.to_king()
+        elif move.stop.row == self.board_size and piece.color == Color.WHITE and isinstance(piece, Man):
+            piece = piece.to_king()
+
+        self.switch_player()
 
     def make_move_gen(self, move: Move):
         piece = self.board.get_field_by_position(move.start)
@@ -66,7 +84,6 @@ class Player:
         self.color = color
         self.pieces = []
         self.score = 0
-        captured_pieces = []
         self.valid_moves = None
 
     def add_piece(self, piece):
@@ -86,14 +103,16 @@ class Player:
         else:
             print("Player does not own this piece!")
 
-    def get_valid_moves(self):
+    def find_valid_moves(self):
         king_capturing = False
         man_capturing = False
         moves = {}
+        self.valid_moves = {}
+
         for piece in self.pieces:
-            if king_capturing and isinstance(piece, Man):
-                break
             valid_moves = piece.get_valid_moves()
+            moves[piece] = valid_moves
+
             if valid_moves:
                 if valid_moves[0].captured_pieces:
                     if isinstance(piece, King):
@@ -102,31 +121,66 @@ class Player:
                     else:
                         if not man_capturing:
                             man_capturing = True
-                else:
-                    if king_capturing or man_capturing:
+
+        # filtering only valid moves
+        for piece in self.pieces:
+            if king_capturing and isinstance(piece, Man):
+                break
+            if moves[piece]:
+                if man_capturing or king_capturing:
+                    if moves[piece][0].captured_pieces:
+                        self.valid_moves[piece] = moves[piece]
+                    elif man_capturing and isinstance(piece, King):
+                        self.valid_moves[piece] = moves[piece]
+                    else:
                         continue
-                moves[piece] = valid_moves
+                else:
+                    self.valid_moves[piece] = moves[piece]
 
-        self.valid_moves = moves
-        return moves
+        return self.valid_moves
 
-    def get_current_valid_moves(self, piece, jumped_positions=[]):
+        # for piece in self.pieces:
+        #     if king_capturing and isinstance(piece, Man):
+        #         break
+        #     valid_moves = piece.get_valid_moves()
+        #     if valid_moves:
+        #         if valid_moves[0].captured_pieces:
+        #             if isinstance(piece, King):
+        #                 if not king_capturing:
+        #                     king_capturing = True
+        #             else:
+        #                 if not man_capturing:
+        #                     man_capturing = True
+        #         else:
+        #             if king_capturing or man_capturing:
+        #                 continue
+        #         moves[piece] = valid_moves
+
+        # finding all valid moves for all pieces
+
+
+    def find_current_valid_moves(self, piece, jumped_positions=[]):
         moves = []
         for move in self.valid_moves[piece]:
             if jumped_positions:
-                sep = len(jumped_positions) - 1
+                sep = len(jumped_positions)
                 if str(move.get_jump_positions()[:sep]) == str(jumped_positions):
                     moves.append(move)
             else:
                 moves.append(move)
-
-        self.valid_moves = {piece: moves}
+        # rewrites valid moves to contain only possible moves for current piece
+        if jumped_positions:
+            self.valid_moves = {piece: moves}
         return moves
 
     def get_valid_next_positions(self, piece, jumped_positions=None):
+        if not jumped_positions:
+            index = 0
+        else:
+            index = len(jumped_positions)
         next_positions = []
         for move in self.valid_moves[piece]:
-            next_positions.append(move.get_jump_positions()[len(jumped_positions)])
+            next_positions.append(move.get_jump_positions()[index])
         return next_positions
 
     def get_move_from_positions(self, piece, positions):
@@ -134,20 +188,19 @@ class Player:
             if str(move.get_jump_positions()) == str(positions):
                 return move
 
-    def get_valid_first_jumps(self):
-        positions = []
-        for piece in self.valid_moves.keys():
-            for move in self.valid_moves[piece]:
-                positions.append(move.start)
-        return positions
-
     # korunuj kamen na damu
-    def coronate_piece(self, piece):
+    def piece_to_king(self, piece):
         king = King(piece.color, piece.position, piece.board)
         self.remove_piece(piece)
         piece.board.remove_piece(piece)
         self.add_piece(king)
         piece.board.add_piece(king)
+        return piece
+
+    def get_random_move(self):
+        self.find_valid_moves()
+        piece_moves = random.choice(list(self.valid_moves.values()))
+        return random.choice(piece_moves)
 
 
 if __name__ == "__main__":

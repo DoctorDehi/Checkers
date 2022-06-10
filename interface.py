@@ -112,11 +112,10 @@ class BoardWidget(GridLayout):
                 self.squares[row][column].canvas.ask_update()
 
     def on_touch_down(self, touch):
-        moves = self.game.player_white.get_valid_moves()
+        moves = self.game.player_white.find_valid_moves()
         next_move = next(iter(moves.values()))[0]
         for position in self.game.make_move_gen(next_move):
             self.draw_board()
-            self.parent.reset_context()
 
 
 class InfoWidget(GridLayout):

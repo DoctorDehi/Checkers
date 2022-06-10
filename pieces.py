@@ -1,6 +1,6 @@
 from enum import Enum
 
-from accessories import Position
+from position import Position
 from board import Board
 from moves import MoveTree, PositionNode
 

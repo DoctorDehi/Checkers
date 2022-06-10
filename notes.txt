@@ -2,5 +2,8 @@ UML diagram - rozpracováno
 https://drive.google.com/file/d/1zu6Jhz9HtB31lC8TAxB1T5o68TpzryqG/view?usp=sharing
 
 TODO:
-    - vymyslet tahy
-    - vymyslet propojení s interfacem
+    INTERFACE
+        - vytvořit detekci kliknutí na políčko
+        - zobrazovat možné pozice kam může figurka
+        - přesouvání figurek
+        - vyhodnocení zda tah ještě pokračuje

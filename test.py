@@ -1,5 +1,6 @@
 from pieces import King, Man, Piece
 from game import Game
+from position import Position
 #
 # g6 = Game()
 # g6.load_game_from_CSV("saves/tahy6.csv")
@@ -17,13 +18,25 @@ from game import Game
 g = Game()
 g.load_game_from_CSV("saves/tahy4.csv")
 g.board.nice_print()
-moves = g.player_white.get_valid_moves()
+moves = g.player_white.find_valid_moves()
 piece = g.player_white.pieces[0]
-print(moves)
-move = moves[piece][0]
 print(g.player_white.get_valid_next_positions(piece))
-for i in g.make_move_gen(move):
-    g.board.nice_print()
+g.player_white.find_current_valid_moves(piece, [Position.from_notation("F6")])
+print(g.player_white.get_valid_next_positions(piece))
+g.player_white.find_current_valid_moves(piece, [Position.from_notation("F6"), Position.from_notation("H8")])
+print(g.player_white.get_valid_next_positions(piece))
+print(moves)
+print(g.player_white.valid_moves)
+
+print()
+print(g.player_black.find_valid_moves())
+print(g.player_black.get_random_move())
+print(g.player_white.find_valid_moves())
+print(g.player_white.get_random_move())
+# move = moves[piece][0]
+# print(g.player_white.get_valid_next_positions(piece))
+# for i in g.make_move_gen(move):
+#     g.board.nice_print()
 
 
 
