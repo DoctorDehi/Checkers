@@ -66,7 +66,7 @@ class Player:
                 break
             valid_moves = piece.get_valid_moves()
 
-            if valid_moves and valid_moves[0].turnovers:
+            if valid_moves and valid_moves[0].captured_pieces:
                 if isinstance(piece, King):
                     if not king_capturing:
                         king_capturing = True
