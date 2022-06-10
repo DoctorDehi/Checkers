@@ -1,4 +1,4 @@
-from position import Position
+from accessories import Position
 
 
 class Board:

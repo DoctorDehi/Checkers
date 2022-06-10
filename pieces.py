@@ -1,6 +1,6 @@
 from enum import Enum
 
-from position import Position
+from accessories import Position
 from board import Board
 from moves import MoveTree, PositionNode
 
@@ -9,15 +9,6 @@ from moves import MoveTree, PositionNode
 class Color(Enum):
     BLACK = 0
     WHITE = 1
-
-
-class Move:
-    def __init__(self, vertices: list[Position]):
-        """
-
-        :param vertices: seznam poloh: počáteční + body obratu + koncový
-        """
-        ...
 
 
 class Piece:
@@ -31,6 +22,12 @@ class Piece:
 
     def __repr__(self):
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
+
+    def get_possible_moves(self) -> MoveTree:
+        raise NotImplementedError("abstract method")
+
+    def _search_in_vector(self, vector, current_direction, captured=None) -> list[PositionNode]:
+        raise NotImplementedError("abstract method")
 
     def _gen_vector(self, direction_x, direction_y, start):
         positions = []
@@ -54,6 +51,7 @@ class Man(Piece):
 
     def __init__(self, color: Color, position: Position, board: Board):
         super().__init__(color, position, board)
+        self.last_move_tree = None
 
     def symbol(self):
         # přebarvení
@@ -61,6 +59,17 @@ class Man(Piece):
             return "\u2B24"
         else:
             return "\u25CB"
+
+    def get_valid_moves(self, move_tree=None):
+        if not move_tree:
+            move_tree = self.get_possible_moves()
+
+        end_nodes = move_tree.get_end_nodes()
+        for node in end_nodes:
+            # je zde braní?
+            #  pokud ano vyfiltruj pouze kompletní tahy s braním
+            # vygeneruj list tahů
+            ...
 
     def get_possible_moves(self):
         move_tree = MoveTree()
@@ -71,6 +80,8 @@ class Man(Piece):
             root.add_descendants(self._search_in_vector(
                 self._gen_vector(direction[0], direction[1], self.position), direction)
             )
+
+        self.last_move_tree = move_tree
         return move_tree
 
     def _search_in_vector(self, vector, current_direction, captured=None):
@@ -79,7 +90,6 @@ class Man(Piece):
         position_nodes = []
         last_piece = None
         for position in vector:
-            print(position, captured)
             piece = self.board.get_field_by_position(position)
             if piece == 1:
                 if not last_piece and not captured:
@@ -111,6 +121,7 @@ class King(Piece):
 
     def __init__(self, color: Color, position: Position, board: Board):
         super().__init__(color, position, board)
+        self.last_move_tree = None
 
     def symbol(self):
         # return "\u1F45"
@@ -118,6 +129,21 @@ class King(Piece):
             return "\u29BF"
         else:
             return "\u29BE"
+
+    def get_valid_moves(self, move_tree=None):
+        if not move_tree:
+            move_tree = self.get_possible_moves()
+
+        end_nodes = move_tree.get_end_nodes()
+        moves = []
+        for node in end_nodes:
+            if node.captured_pieces:
+                # check somehow if there is a capturing move, select only complete moves
+                print(node.position, node.captured_pieces)
+                moves.append(move_tree.to_move(node))
+        ...
+
+        return moves
 
     def get_possible_moves(self):
         move_tree = MoveTree()
@@ -128,6 +154,8 @@ class King(Piece):
             root.add_descendants(self._search_in_vector(
                 self._gen_vector(direction[0], direction[1], self.position), direction)
             )
+
+        self.last_move_tree = move_tree
         return move_tree
 
     def _search_in_vector(self, vector, current_direction, captured=None):
@@ -136,7 +164,6 @@ class King(Piece):
         position_nodes = []
         last_piece = None
         for position in vector:
-            print(position, captured)
             piece = self.board.get_field_by_position(position)
             if piece == 1:
                 if not last_piece and not captured:
@@ -145,7 +172,7 @@ class King(Piece):
                 if last_piece:
                     if last_piece in captured:
                         break
-                    position_node = PositionNode(position, [last_piece] + [captured])
+                    position_node = PositionNode(position, [last_piece] + captured)
                     position_nodes.append(position_node)
 
                     for direction in self.directions:
@@ -154,7 +181,6 @@ class King(Piece):
                                 self._gen_vector(direction[0], direction[1], position),
                                 direction, captured + [last_piece])
                             )
-
             elif piece.color == self.color:
                 break
             else:
