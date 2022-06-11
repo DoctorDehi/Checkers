@@ -100,7 +100,7 @@ class Man(Piece):
                                 self._gen_vector(direction[0], direction[1], position),
                                 direction, captured + [last_piece])
                             )
-
+                    break
             elif piece.color == self.color:
                 break
             elif last_piece:

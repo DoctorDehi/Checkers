@@ -16,6 +16,13 @@ class Game:
         self.moves_counter = 0
         self.current_player = self.player_white
 
+    def reset_game(self):
+        self.board = Board(Game.board_size)
+        self.player_white = Player(Color.WHITE)
+        self.player_black = Player(Color.BLACK)
+        self.moves_counter = 0
+        self.current_player = self.player_white
+
     def create_new_game(self):
         self.load_game_from_CSV('new_game.csv')
 
@@ -33,15 +40,17 @@ class Game:
                         self.player_black.add_piece(King(Color.BLACK, position, self.board))
                     elif row[1] == "ww":
                         self.player_white.add_piece(King(Color.WHITE, position, self.board))
+            self.current_player.find_valid_moves()
 
         except Exception as e:
             raise Exception("Error while loading CSV: " + str(e))
 
-    def switch_player(self):
+    def toggle_player(self):
         if self.current_player == self.player_white:
             self.current_player = self.player_black
         else:
             self.current_player = self.player_white
+        self.current_player.find_valid_moves()
 
     def make_move(self, move: Move):
         piece = self.board.get_field_by_position(move.start)
@@ -53,21 +62,20 @@ class Game:
 
     def make_partial_move(self, piece, position):
         self.board.move_piece(piece, position.row, position.column)
-        self.board.nice_print()
 
     def end_move(self, piece, move: Move):
+        opponent = self.player_black if self.current_player == self.player_white else self.player_white
         if move.captured_pieces:
-            for piece in move.captured_pieces:
-                self.board.remove_piece(piece)
-                self.current_player.remove_piece(piece)
+            for cap_piece in move.captured_pieces:
+                self.board.remove_piece(cap_piece)
+                opponent.remove_piece(cap_piece)
                 self.current_player.score += 1
+
         # transform to king
         if move.stop.row == 0 and piece.color == Color.BLACK and isinstance(piece, Man):
-            piece = piece.to_king()
-        elif move.stop.row == self.board_size and piece.color == Color.WHITE and isinstance(piece, Man):
-            piece = piece.to_king()
-
-        self.switch_player()
+            piece = self.player_black.piece_to_king(piece)
+        elif move.stop.row == self.board_size-1 and piece.color == Color.WHITE and isinstance(piece, Man):
+            self.player_white.piece_to_king(piece)
 
     def make_move_gen(self, move: Move):
         piece = self.board.get_field_by_position(move.start)
@@ -85,6 +93,7 @@ class Player:
         self.pieces = []
         self.score = 0
         self.valid_moves = None
+        self.current_valid_moves = None
 
     def add_piece(self, piece):
         if piece not in self.pieces:
@@ -137,6 +146,7 @@ class Player:
                 else:
                     self.valid_moves[piece] = moves[piece]
 
+        self.current_valid_moves = self.valid_moves
         return self.valid_moves
 
         # for piece in self.pieces:
@@ -158,10 +168,11 @@ class Player:
 
         # finding all valid moves for all pieces
 
-
     def find_current_valid_moves(self, piece, jumped_positions=[]):
         moves = []
-        for move in self.valid_moves[piece]:
+        if not self.valid_moves.get(piece):
+            return moves
+        for move in self.current_valid_moves.get(piece):
             if jumped_positions:
                 sep = len(jumped_positions)
                 if str(move.get_jump_positions()[:sep]) == str(jumped_positions):
@@ -170,17 +181,21 @@ class Player:
                 moves.append(move)
         # rewrites valid moves to contain only possible moves for current piece
         if jumped_positions:
-            self.valid_moves = {piece: moves}
+            self.current_valid_moves = {piece: moves}
         return moves
 
-    def get_valid_next_positions(self, piece, jumped_positions=None):
+    def get_next_positions(self, piece, jumped_positions=None):
+        if not self.valid_moves.get(piece):
+            return []
         if not jumped_positions:
             index = 0
         else:
             index = len(jumped_positions)
         next_positions = []
-        for move in self.valid_moves[piece]:
-            next_positions.append(move.get_jump_positions()[index])
+        for move in self.current_valid_moves.get(piece):
+            positions = move.get_jump_positions()
+            if len(positions) > index:
+                next_positions.append(positions[index])
         return next_positions
 
     def get_move_from_positions(self, piece, positions):

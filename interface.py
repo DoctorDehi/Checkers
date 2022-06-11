@@ -8,11 +8,8 @@ from kivy.graphics import Color, Rectangle, Ellipse, Line
 from kivy.properties import OptionProperty, BooleanProperty
 
 from enum import Enum
-import time
-
 
 from pieces import Man, King, Position
-from pieces import Color as PieceColor
 
 
 class SquareColor(Enum):
@@ -29,6 +26,7 @@ class Square(Button):
         self.scolor = SquareColor.BLACK if (self.row + self.column) % 2 == 0 else SquareColor.LIGHT
         super().__init__(text=self.notation())
         self.size = (0, 0)
+        self.selectable = False
         self.bind(size=self.repaint)
         self.bind(piece=self.repaint)
 
@@ -55,15 +53,18 @@ class Square(Button):
                     Color(0.45, 0.45, 0.45)
 
                     Line(pos=(self.x + self.width // 6, self.y + self.height // 6),
-                         ellipse=(self.x + self.width // 3, self.y + self.height // 3, self.width//3, self.height//3),
-                         width=1.5)
+                        ellipse=(
+                        self.x + self.width // 3, self.y + self.height // 3, self.width // 3, self.height // 3),
+                        width=1.5)
+
+            if self.selectable:
+                Color(0, 1, 0)
+
+                Ellipse(pos=(self.x + self.width // 2.6, self.y + self.height // 2.6),
+                        size=(2 * self.width // 8, 2 * self.height // 8))
 
     def on_press(self):
-        self.piece = "White"
-        self.parent.game.player_white.add_piece(
-            Man(PieceColor.WHITE, Position(self.row, self.column), self.parent.game.board)
-        )
-        self.parent.draw_board()
+        self.parent.square_clicked(self)
 
     def notation(self):
         return f"{'ABCDEFGH'[self.column]}{self.row + 1}"
@@ -72,9 +73,14 @@ class Square(Button):
 class BoardWidget(GridLayout):
     squares = []
 
-    def __init__(self, game, *args, **kwargs):
-        super(BoardWidget, self).__init__(*args, **kwargs)
-        self.game = game
+    def __init__(self, app, **kwargs):
+        super(BoardWidget, self).__init__(**kwargs)
+        self.game = app.game
+        self.info = app.info
+        self.current_piece = None
+        self.in_move = False
+        self.jumped_positions = []
+        self.next_positions = []
 
     def add_widget(self, widget, *args, **kwargs):
         super().add_widget(widget)
@@ -89,6 +95,38 @@ class BoardWidget(GridLayout):
                 irow.append(square)
                 self.add_widget(square)
             self.squares.append(irow)
+
+    def square_clicked(self, square):
+        player = self.game.current_player
+        if square.piece != "None" and not self.jumped_positions:
+            piece = self.game.board.get_field(square.row, square.column)
+            if piece.color == player.color:
+                player.find_valid_moves()
+                self.next_positions = player.get_next_positions(piece, self.jumped_positions)
+                self.current_piece = piece
+
+        elif self.current_piece:
+            for position in self.next_positions:
+                if square.row == position.row and square.column == position.column:
+                    self.game.make_partial_move(self.current_piece, position)
+                    self.jumped_positions.append(position)
+                    player.find_current_valid_moves(self.current_piece, self.jumped_positions)
+                    self.next_positions = player.get_next_positions(self.current_piece, self.jumped_positions)
+                    # move is done
+                    if not self.next_positions:
+                        move = player.get_move_from_positions(self.current_piece, self.jumped_positions)
+                        self.game.end_move(self.current_piece, move)
+                        self.jumped_positions.clear()
+                        self.game.toggle_player()
+                        if not self.game.current_player.valid_moves:
+                            self.game_over(winner=player)
+                        else:
+                            self.info.toggle_player()
+                    break
+        self.draw_board()
+
+    def game_over(self, winner):
+        self.info.game_over(winner)
 
     def draw_board(self):
         board_size = self.game.board.get_size()
@@ -109,13 +147,12 @@ class BoardWidget(GridLayout):
                         color = "BlackK"
 
                 self.squares[row][column].piece = color
-                self.squares[row][column].canvas.ask_update()
+                self.squares[row][column].selectable = False
+                self.squares[row][column].repaint()
 
-    def on_touch_down(self, touch):
-        moves = self.game.player_white.find_valid_moves()
-        next_move = next(iter(moves.values()))[0]
-        for position in self.game.make_move_gen(next_move):
-            self.draw_board()
+        for position in self.next_positions:
+            self.squares[position.row][position.column].selectable = True
+            self.squares[position.row][position.column].repaint()
 
 
 class InfoWidget(GridLayout):
@@ -125,20 +162,23 @@ class InfoWidget(GridLayout):
         super().__init__(cols=2)
         self.add_widget(Label(text="Current player: "))
         self.player_label = Label(text="White" if self.player else "Black")
+        self.winner_label = Label(text="")
         self.player = True
         self.add_widget(self.player_label)
+        self.add_widget(self.winner_label)
         self.bind(player=self.player_changed)
         self.game = game
 
     def toggle_player(self):
         self.player = not self.player
+        self.parent.next_positions = []
 
     def player_changed(self, *args):
         self.player_label.text = "White" if self.player else "Black"
         self.player_label.color = (1, 1, 1) if self.player else (0.5, 0.5, 0.5)
 
-    def on_touch_down(self, touch):
-        self.toggle_player()
+    def game_over(self, winner):
+        self.winner_label.text = "Player  " + self.player_label.text + " won!"
 
 
 class CheckersApp(App):
@@ -146,16 +186,18 @@ class CheckersApp(App):
         super().__init__()
         self.game = game
         self.squares = []
+        self.board = None
+        self.info = None
 
     def build(self):
         layout = BoxLayout(orientation="horizontal")
-        board = BoardWidget(self.game, cols=8, orientation="lr-bt")
-        board.create_board()
-        layout.add_widget(board)
-        layout.add_widget(InfoWidget(self.game))
+        self.info = InfoWidget(self.game)
+        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
+        self.board.create_board()
+        layout.add_widget(self.board)
+        layout.add_widget(self.info)
+        self.game.current_player.find_valid_moves()
 
-        board.draw_board()
+        self.board.draw_board()
 
         return layout
-
-
