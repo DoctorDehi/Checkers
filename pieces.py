@@ -34,7 +34,7 @@ class Piece:
     def _search_in_vector(self, vector, current_direction, captured=None) -> list[PositionNode]:
         raise NotImplementedError("abstract method")
 
-    def _gen_vector(self, direction_x, direction_y, start):
+    def _gen_vector(self, direction_x, direction_y, start) -> list[Position]:
         positions = []
         position = start
         row = position.row + direction_x
@@ -90,7 +90,9 @@ class Man(Piece):
                     position_node = PositionNode(position)
                     position_nodes.append([position_node, current_direction])
                     break
-                if last_piece:
+                elif not last_piece and captured:
+                    break
+                elif last_piece:
                     position_node = PositionNode(position, [last_piece] + captured)
                     position_nodes.append([position_node, current_direction])
 

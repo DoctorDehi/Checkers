@@ -11,3 +11,9 @@ TODO:
             - vzdát se
             - načíst hru
 
+    NAČÍTÁNÍ HRY:
+        - dopočítání skóre
+    HRA PRO JEDNOHO HRÁČE:
+        - možnost přepnutí
+
+
