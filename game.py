@@ -149,25 +149,6 @@ class Player:
         self.current_valid_moves = self.valid_moves
         return self.valid_moves
 
-        # for piece in self.pieces:
-        #     if king_capturing and isinstance(piece, Man):
-        #         break
-        #     valid_moves = piece.get_valid_moves()
-        #     if valid_moves:
-        #         if valid_moves[0].captured_pieces:
-        #             if isinstance(piece, King):
-        #                 if not king_capturing:
-        #                     king_capturing = True
-        #             else:
-        #                 if not man_capturing:
-        #                     man_capturing = True
-        #         else:
-        #             if king_capturing or man_capturing:
-        #                 continue
-        #         moves[piece] = valid_moves
-
-        # finding all valid moves for all pieces
-
     def find_current_valid_moves(self, piece, jumped_positions=[]):
         moves = []
         if not self.valid_moves.get(piece):

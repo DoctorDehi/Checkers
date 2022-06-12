@@ -7,22 +7,22 @@ class Board:
         self._board = [[1 if (i+j) % 2 == 0 else 0 for j in range(size)] for i in range(size)]
 
     def simple_print(self):
-        for radek in self._board:
-            print(*radek)
+        for line in self._board:
+            print(*line)
 
     def nice_print(self):
         print(*[" ", "A", "B", "C", "D", "E", "F", "G", "H"])
-        pocet_radek = 1
-        for radek in self._board:
-            print_list = [pocet_radek]
-            for prvek in radek:
-                if prvek == 1:
+        line_count = 1
+        for line in self._board:
+            print_list = [line_count]
+            for field in line:
+                if field == 1:
                     print_list.append(u'\u25a0')
-                elif prvek == 0:
+                elif field == 0:
                     print_list.append(" ")
                 else:
-                    print_list.append(prvek.symbol())
-            pocet_radek += 1
+                    print_list.append(field.symbol())
+            line_count += 1
             print(*print_list)
 
     def field_exists(self, row, column):
