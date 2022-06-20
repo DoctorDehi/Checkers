@@ -10,8 +10,6 @@ from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 
 from enum import Enum
 
-from numpy import square
-
 from pieces import Man, King, Position
 
 
@@ -206,13 +204,20 @@ class GameScreen(Screen):
         self.layout = BoxLayout(orientation="horizontal")
         self.squares = []
         self.game = game
+        self.surrender_btn = Button(text = "Surrender", font_size = 32, background_color = (0,255,255,1))
+        self.surrender_btn.bind(on_release = self.screen_transition)
         self.info = InfoWidget(self.game)
+        self.info.add_widget(self.surrender_btn)
         self.board = BoardWidget(self, cols=8, orientation="lr-bt")
         self.board.create_board()
         self.board.draw_board()
         self.layout.add_widget(self.board)
         self.layout.add_widget(self.info)
         self.game.current_player.find_valid_moves()
+        self.add_widget(self.layout)
+
+    def screen_transition(self, **args):
+        self.manager.current = "Victor"
         
     
     """    
@@ -263,4 +268,4 @@ class CheckersApp(App):
         game.board.squares
         sm.add_widget(menu)
         sm.add_widget(game)
-        return game
+        return sm
