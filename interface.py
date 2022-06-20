@@ -205,7 +205,7 @@ class GameScreen(Screen):
         self.squares = []
         self.game = game
         self.surrender_btn = Button(text = "Surrender", font_size = 32, background_color = (0,255,255,1))
-        self.surrender_btn.bind(on_release = self.screen_transition)
+        self.surrender_btn.bind(on_release = self.screen_transition_victor)
         self.info = InfoWidget(self.game)
         self.info.add_widget(self.surrender_btn)
         self.board = BoardWidget(self, cols=8, orientation="lr-bt")
@@ -216,8 +216,17 @@ class GameScreen(Screen):
         self.game.current_player.find_valid_moves()
         self.add_widget(self.layout)
 
-    def screen_transition(self, **args):
+    def screen_transition_victor(self, instance, **args):
         self.manager.current = "Victor"
+
+
+class VictorScreen(Screen):
+    def __init__(self, info, **kwargs):
+        super(VictorScreen, self).__init__(**kwargs)
+        self.info = info
+        victor = "Black" if self.info.player_label == "White" else "White"
+        self.add_widget(Label(text =f"Victor is {victor}"))
+        
         
     
     """    
@@ -265,7 +274,9 @@ class CheckersApp(App):
         sm = ScreenManager(transition=FadeTransition())
         menu = MenuScreen(name = "Menu")
         game = GameScreen(self.game, name = "Checkers")
+        victor = VictorScreen(game.info, name = "Victor")
         game.board.squares
         sm.add_widget(menu)
         sm.add_widget(game)
+        sm.add_widget(victor)
         return sm
