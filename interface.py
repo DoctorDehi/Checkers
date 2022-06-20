@@ -6,9 +6,11 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle, Ellipse, Line
 from kivy.properties import OptionProperty, BooleanProperty
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 
 from enum import Enum
+
+from numpy import square
 
 from pieces import Man, King, Position
 
@@ -188,11 +190,34 @@ class ScreenManager(ScreenManager):
 
 
 class MenuScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(MenuScreen, self).__init__(**kwargs)
+        self.button = Button(text="New Game", font_size = 32,)
+        self.button.bind(on_release = self.screen_transition)
+        self.add_widget(self.button)
+
+    def screen_transition(self, *args):
+        self.manager.current = "Checkers"
 
 
 class GameScreen(Screen):
-    layout = BoxLayout(orientation="horizontal")
+    def __init__(self, game, **kwargs):
+        super(GameScreen, self).__init__(**kwargs)
+        self.layout = BoxLayout(orientation="horizontal")
+        self.squares = []
+        self.game = game
+        self.info = InfoWidget(self.game)
+        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
+        self.board.create_board()
+        self.board.draw_board()
+        self.layout.add_widget(self.board)
+        self.layout.add_widget(self.info)
+        self.game.current_player.find_valid_moves()
+        
+    
+    """    
+    def start_game(self, instance):
+        layout = BoxLayout(orientation="horizontal")
         self.info = InfoWidget(self.game)
         self.board = BoardWidget(self, cols=8, orientation="lr-bt")
         self.board.create_board()
@@ -202,16 +227,15 @@ class GameScreen(Screen):
         
         self.board.draw_board()
 
+        return layout
+    """
 
 class CheckersApp(App):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.squares = []
-        self.board = None
-        self.info = None
-        self.start = None
-
+        
+    """
     def build(self):
         self.start = GridLayout(cols = 1)
         startButton = Button(text= "Nová hra", font_size= 16)
@@ -230,4 +254,13 @@ class CheckersApp(App):
         
         self.board.draw_board()
 
-        return layout
+        return layout"""
+
+    def build(self):
+        sm = ScreenManager(transition=FadeTransition())
+        menu = MenuScreen(name = "Menu")
+        game = GameScreen(self.game, name = "Checkers")
+        game.board.squares
+        sm.add_widget(menu)
+        sm.add_widget(game)
+        return game
