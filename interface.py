@@ -221,10 +221,12 @@ class GameScreen(Screen):
 
 
 class VictorScreen(Screen):
-    def __init__(self, info, **kwargs):
-        super(VictorScreen, self).__init__(**kwargs)
-        self.info = info
-        victor = "Black" if self.info.player_label == "White" else "White"
+    def __init__(self, game, **kwargs):
+        super(VictorScreen,self).__init__(**kwargs)
+        self.game = game
+        
+    def on_enter(self):
+        victor = "Black" if self.game.current_player.get_color_text() == "White" else "White"
         self.add_widget(Label(text =f"Victor is {victor}"))
         
         
@@ -274,7 +276,7 @@ class CheckersApp(App):
         sm = ScreenManager(transition=FadeTransition())
         menu = MenuScreen(name = "Menu")
         game = GameScreen(self.game, name = "Checkers")
-        victor = VictorScreen(game.info, name = "Victor")
+        victor = VictorScreen(self.game, name = "Victor")
         game.board.squares
         sm.add_widget(menu)
         sm.add_widget(game)

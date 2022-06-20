@@ -198,6 +198,9 @@ class Player:
         piece_moves = random.choice(list(self.valid_moves.values()))
         return random.choice(piece_moves)
 
+    def get_color_text(self):
+        return "White" if self.color == Color.WHITE else "Black"
+
 
 if __name__ == "__main__":
     game = Game()
