@@ -6,6 +6,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle, Ellipse, Line
 from kivy.properties import OptionProperty, BooleanProperty
+from kivy.uix.screenmanager import Screen, ScreenManager
 
 from enum import Enum
 
@@ -181,6 +182,27 @@ class InfoWidget(GridLayout):
         self.winner_label.text = "Player  " + self.player_label.text + " won!"
 
 
+class ScreenManager(ScreenManager):
+    def __init__(self, **kwargs):
+        super(ScreenManager, self).__init__(**kwargs)
+
+
+class MenuScreen(Screen):
+    pass
+
+
+class GameScreen(Screen):
+    layout = BoxLayout(orientation="horizontal")
+        self.info = InfoWidget(self.game)
+        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
+        self.board.create_board()
+        layout.add_widget(self.board)
+        layout.add_widget(self.info)
+        self.game.current_player.find_valid_moves()
+        
+        self.board.draw_board()
+
+
 class CheckersApp(App):
     def __init__(self, game):
         super().__init__()
@@ -188,8 +210,16 @@ class CheckersApp(App):
         self.squares = []
         self.board = None
         self.info = None
+        self.start = None
 
     def build(self):
+        self.start = GridLayout(cols = 1)
+        startButton = Button(text= "Nová hra", font_size= 16)
+        startButton.bind(on_press = self.start_game)
+        self.start.add_widget(startButton)
+        return self.start
+
+    def start_game(self, instance):
         layout = BoxLayout(orientation="horizontal")
         self.info = InfoWidget(self.game)
         self.board = BoardWidget(self, cols=8, orientation="lr-bt")
@@ -197,7 +227,7 @@ class CheckersApp(App):
         layout.add_widget(self.board)
         layout.add_widget(self.info)
         self.game.current_player.find_valid_moves()
-
+        
         self.board.draw_board()
 
         return layout
