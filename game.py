@@ -17,6 +17,7 @@ class Game:
         self.current_player = None
         self.winner = None
         self.load_game = False
+        self.CSV_path = None
         self.player_vs_bot = False
 
     def reset_game(self):
@@ -30,7 +31,10 @@ class Game:
         self.reset_game()
         self.load_game_from_CSV('new_game.csv')
 
-    def load_game_from_CSV(self, filename):
+    def load_game_from_CSV(self, filename=None):
+        if not filename:
+            filename = self.CSV_path
+
         self.reset_game()
         try:
             with open(filename, 'r') as file:
@@ -194,7 +198,6 @@ class Player:
         return piece
 
     def get_random_move(self):
-        self.find_valid_moves()
         piece_moves = random.choice(list(self.valid_moves.values()))
         return random.choice(piece_moves)
 

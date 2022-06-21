@@ -132,11 +132,12 @@ class BoardWidget(GridLayout):
     def next_move(self):
         self.game.toggle_player()
         self.info.toggle_player()
-        if self.game.current_player.is_bot:
-            self.bot_move()
         # if toggled player has no moves
         if not self.game.current_player.valid_moves:
             self.game_over()
+
+        elif self.game.current_player.is_bot:
+            self.bot_move()
 
     def bot_move(self):
         player = self.game.current_player
@@ -221,11 +222,17 @@ class MenuScreen(Screen):
 
     def screen_transition_button1(self, *args):
         # slouží k načtení nové hry
+        self.game.load_game = False
+        self.game.CSV_path = None
         self.manager.current = "Menu_2"
 
     def screen_transition_button2(self, *args):
         # slouží pro přechod na obrazovku hry, v případě, kdy se májí načíst pozice z CSV
         self.game.load_game = True
+        filename = self.path.text
+        if not filename.endswith(".csv"):
+            filename = filename + ".csv"
+        self.game.CSV_path = 'saves/' + filename
         self.manager.current = "Menu_2"
 
 
@@ -243,6 +250,7 @@ class MenuScreen2(Screen):
         self.add_widget(self.lay)
 
     def screen_transition_btn1(self, *args):
+        self.game.player_vs_bot = False
         self.manager.current = "Checkers"
 
     def screen_transition_btn2(self, *args):
@@ -286,7 +294,7 @@ class GameScreen(Screen):
         self.add_widget(self.layout)
 
         if self.game.load_game:
-            self.game.load_game_from_CSV("saves/nacti.csv")
+            self.game.load_game_from_CSV()
         else:
             self.game.create_new_game()
 
@@ -302,13 +310,16 @@ class VictorScreen(Screen):
     def __init__(self, game, **kwargs):
         super(VictorScreen, self).__init__(**kwargs)
         self.game = game
+        self.back_btn = None
+        self.layout = None
 
     def on_enter(self):
+        self.clear_widgets()
         victor = self.game.winner.get_color_text()
-        self.back_btn = Button(text= "Go Back To Menu", font_size = 32)
-        self.back_btn.bind(on_release = self.screen_transition_back)
-        self.layout= GridLayout(cols = 1)
-        self.layout.add_widget(Label(text =f"Victor is {victor}"))
+        self.back_btn = Button(text="Go Back To Menu", font_size = 32)
+        self.back_btn.bind(on_release=self.screen_transition_back)
+        self.layout = GridLayout(cols=1)
+        self.layout.add_widget(Label(text=f"Victor is {victor}"))
         self.layout.add_widget(self.back_btn)
         self.add_widget(self.layout)
 

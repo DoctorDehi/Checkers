@@ -4,16 +4,14 @@ https://drive.google.com/file/d/1zu6Jhz9HtB31lC8TAxB1T5o68TpzryqG/view?usp=shari
 TODO:
     INTERFACE
         - zobrazení šachové notace v gui
-        - lepší zobrazení výhry, remízy
-        - tlačítka:
-            - 2 hráči x pc
-            - nová hra
-            - vzdát se
-            - načíst hru
+        - lepší zobrazení tahu bota
+
 
     NAČÍTÁNÍ HRY:
         - dopočítání skóre
-    HRA PRO JEDNOHO HRÁČE:
-        - možnost přepnutí
+
+    OPRAVA TAHŮ:
+        - dáma se nesmí vrátit na pole kde začala
+
 
 
