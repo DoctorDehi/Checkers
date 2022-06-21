@@ -273,8 +273,15 @@ class VictorScreen(Screen):
         
     def on_enter(self):
         victor = "Black" if self.game.current_player.get_color_text() == "White" else "White"
-        self.add_widget(Label(text =f"Victor is {victor}"))
-        
+        self.back_btn = Button(text= "Go Back To Menu", font_size = 32)
+        self.back_btn.bind(on_release = self.screen_transition_back)
+        self.layout= GridLayout(cols = 1)
+        self.layout.add_widget(Label(text =f"Victor is {victor}"))
+        self.layout.add_widget(self.back_btn)
+        self.add_widget(self.layout)
+
+    def screen_transition_back(self, *arg):
+        self.manager.current = "Menu" 
         
     
     """    
@@ -324,7 +331,6 @@ class CheckersApp(App):
         menu2 = MenuScreen2(self.game, name = "Menu_2")
         game = GameScreen(self.game, name = "Checkers")
         victor = VictorScreen(self.game, name = "Victor")
-        #game.board.squares
         sm.add_widget(menu)
         sm.add_widget(menu2)
         sm.add_widget(game)
