@@ -11,22 +11,27 @@ class Game:
 
     def __init__(self):
         self.board = Board(Game.board_size)
-        self.player_white = Player(Color.WHITE)
-        self.player_black = Player(Color.BLACK)
+        self.player_white = None
+        self.player_black = None
         self.moves_counter = 0
-        self.current_player = self.player_white
+        self.current_player = None
+        self.winner = None
+        self.load_game = False
+        self.player_vs_bot = False
 
     def reset_game(self):
         self.board = Board(Game.board_size)
         self.player_white = Player(Color.WHITE)
-        self.player_black = Player(Color.BLACK)
+        self.player_black = Player(Color.BLACK, self.player_vs_bot)
         self.moves_counter = 0
         self.current_player = self.player_white
 
     def create_new_game(self):
+        self.reset_game()
         self.load_game_from_CSV('new_game.csv')
 
     def load_game_from_CSV(self, filename):
+        self.reset_game()
         try:
             with open(filename, 'r') as file:
                 reader = csv.reader(file)
@@ -52,13 +57,16 @@ class Game:
             self.current_player = self.player_white
         self.current_player.find_valid_moves()
 
+    def game_over(self):
+        self.winner = self.player_white if self.current_player == self.player_black else self.player_black
+
     def make_move(self, move: Move):
         piece = self.board.get_field_by_position(move.start)
         for position in move:
             self.board.move_piece(piece, position.row, position.column)
-            self.board.nice_print()
+            # self.board.nice_print()
         self.end_move(piece, move)
-        self.board.nice_print()
+        # self.board.nice_print()
 
     def make_partial_move(self, piece, position):
         self.board.move_piece(piece, position.row, position.column)
@@ -77,23 +85,15 @@ class Game:
         elif move.stop.row == self.board_size-1 and piece.color == Color.WHITE and isinstance(piece, Man):
             self.player_white.piece_to_king(piece)
 
-    def make_move_gen(self, move: Move):
-        piece = self.board.get_field_by_position(move.start)
-        for position in move:
-            self.board.move_piece(piece, position.row, position.column)
-            yield
-        for piece in move.captured_pieces:
-            self.board.remove_piece(piece)
-            yield
-
 
 class Player:
-    def __init__(self, color: Color):
+    def __init__(self, color: Color, is_bot=False):
         self.color = color
         self.pieces = []
         self.score = 0
         self.valid_moves = None
         self.current_valid_moves = None
+        self.is_bot = is_bot
 
     def add_piece(self, piece):
         if piece not in self.pieces:
