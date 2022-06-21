@@ -232,9 +232,24 @@ class MenuScreen2(Screen):
 class GameScreen(Screen):
     def __init__(self, game, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
-        self.layout = BoxLayout(orientation="horizontal")
-        self.squares = []
         self.game = game
+        """
+        self.layout = None
+        self.squares = []
+        self.surrender_btn = Button(text = "Surrender", font_size = 32, background_color = (0,255,255,1))
+        self.surrender_btn.bind(on_release = self.screen_transition_victor)
+        self.info = InfoWidget(self.game)
+        self.info.add_widget(self.surrender_btn)
+        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
+        self.board.create_board()
+        self.board.draw_board()
+        self.layout.add_widget(self.board)
+        self.layout.add_widget(self.info)
+        self.game.current_player.find_valid_moves()
+        """
+
+    def on_enter(self, *args):
+        self.layout = BoxLayout(orientation="horizontal")
         self.surrender_btn = Button(text = "Surrender", font_size = 32, background_color = (0,255,255,1))
         self.surrender_btn.bind(on_release = self.screen_transition_victor)
         self.info = InfoWidget(self.game)
@@ -309,7 +324,7 @@ class CheckersApp(App):
         menu2 = MenuScreen2(self.game, name = "Menu_2")
         game = GameScreen(self.game, name = "Checkers")
         victor = VictorScreen(self.game, name = "Victor")
-        game.board.squares
+        #game.board.squares
         sm.add_widget(menu)
         sm.add_widget(menu2)
         sm.add_widget(game)
