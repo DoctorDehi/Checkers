@@ -7,6 +7,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle, Ellipse, Line
 from kivy.properties import OptionProperty, BooleanProperty
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
+from kivy.uix.textinput import TextInput
 
 from enum import Enum
 
@@ -195,9 +196,13 @@ class MenuScreen(Screen):
         self.button2 = Button(text= "Load Game From CSV", font_size = 32)
         self.button1.bind(on_release = self.screen_transition_button1)
         self.button2.bind(on_release = self.screen_transition_button2)
+        self.path = TextInput(text = "", multiline = False)
+        self.inner_layout = GridLayout(cols = 2, rows = 1)
         self.layout = GridLayout(cols = 1)
+        self.inner_layout.add_widget(self.button2)
+        self.inner_layout.add_widget(self.path)
         self.layout.add_widget(self.button1)
-        self.layout.add_widget(self.button2)
+        self.layout.add_widget(self.inner_layout)
         self.add_widget(self.layout)
 
     def screen_transition_button1(self, *args):
