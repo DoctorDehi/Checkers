@@ -202,10 +202,30 @@ class MenuScreen(Screen):
 
     def screen_transition_button1(self, *args):
         # slouží k načtení nové hry
-        self.manager.current = "Checkers"
+        self.manager.current = "Menu_2"
     
     def screen_transition_button2(self, *args):
         # slouží pro přechod na obrazovku hry, v případě, kdy se májí načíst pozice z CSV
+        self.manager.current = "Menu_2"
+
+    
+class MenuScreen2(Screen):
+    def __init__(self, game,**kwargs):
+        super(MenuScreen2, self).__init__(**kwargs)
+        self.game = game
+        self.btn1 = Button(text= "Player VS Player", font_size = 32)
+        self.btn2 = Button(text= "Player VS Bot", font_size = 32)
+        self.btn1.bind(on_release = self.screen_transition_btn1)
+        self.btn2.bind(on_release = self.screen_transition_btn2)
+        self.lay = GridLayout(cols = 1)
+        self.lay.add_widget(self.btn1)
+        self.lay.add_widget(self.btn2)
+        self.add_widget(self.lay)
+
+    def screen_transition_btn1(self, *args):
+        self.manager.current = "Checkers"
+
+    def screen_transition_btn2(self, *args):
         self.manager.current = "Checkers"
 
 
@@ -227,7 +247,7 @@ class GameScreen(Screen):
         self.game.current_player.find_valid_moves()
         self.add_widget(self.layout)
 
-    def screen_transition_victor(self, instance, **args):
+    def screen_transition_victor(self, *args):
         self.manager.current = "Victor"
 
 
@@ -286,10 +306,12 @@ class CheckersApp(App):
     def build(self):
         sm = ScreenManager(transition=FadeTransition())
         menu = MenuScreen(self.game, name = "Menu")
+        menu2 = MenuScreen2(self.game, name = "Menu_2")
         game = GameScreen(self.game, name = "Checkers")
         victor = VictorScreen(self.game, name = "Victor")
         game.board.squares
         sm.add_widget(menu)
+        sm.add_widget(menu2)
         sm.add_widget(game)
         sm.add_widget(victor)
         return sm
