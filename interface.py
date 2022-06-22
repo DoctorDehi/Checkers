@@ -10,7 +10,7 @@ from kivy.uix.textinput import TextInput
 
 from enum import Enum
 
-from pieces import Man, King
+from pieces import Man
 
 
 class SquareColor(Enum):
@@ -295,7 +295,7 @@ class VictorScreen(Screen):
     def on_enter(self):
         self.clear_widgets()
         victor = self.game.winner.get_color_text()
-        self.back_btn = Button(text="Go Back To Menu", font_size = 32)
+        self.back_btn = Button(text="Go Back To Menu", font_size=32)
         self.back_btn.bind(on_release=self.screen_transition_back)
         self.layout = GridLayout(cols=1)
         self.layout.add_widget(Label(text=f"Victor is {victor}"))

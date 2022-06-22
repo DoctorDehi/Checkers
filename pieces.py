@@ -1,8 +1,10 @@
 from enum import Enum
+from abc import ABC
+from typing import Optional
 
 from position import Position
 from board import Board
-from moves import MoveTree, PositionNode
+from moves import MoveTree, PositionNode, Move
 
 
 # VÝČTOVÝ TYP - omezený počet instancí
@@ -11,19 +13,20 @@ class Color(Enum):
     WHITE = 1
 
 
-class Piece:
+class Piece(ABC):
+
     def __init__(self, color: Color, position: Position, board: Board):
         self.color = color
         self.position = position
         self.board = board
 
-    def symbol(self):
+    def symbol(self) -> str:
         raise NotImplementedError("abstract method")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
-    def get_valid_moves(self, move_tree=None):
+    def get_valid_moves(self, move_tree: MoveTree = None) -> Move:
         if not move_tree:
             move_tree = self.get_possible_moves()
         return move_tree.get_valid_moves()
@@ -31,10 +34,12 @@ class Piece:
     def get_possible_moves(self) -> MoveTree:
         raise NotImplementedError("abstract method")
 
-    def _search_in_vector(self, vector, current_direction, captured=None) -> list[PositionNode]:
+    def _search_in_vector(
+            self, vector: list[Position], current_direction: tuple[int, int], captured: Optional[list] = None
+    ) -> list[list]:
         raise NotImplementedError("abstract method")
 
-    def _gen_vector(self, direction_x, direction_y, start) -> list[Position]:
+    def _gen_vector(self, direction_x: int, direction_y: int, start: Position) -> list[Position]:
         positions = []
         position = start
         row = position.row + direction_x
@@ -58,14 +63,14 @@ class Man(Piece):
         super().__init__(color, position, board)
         self.last_move_tree = None
 
-    def symbol(self):
+    def symbol(self) -> str:
         # přebarvení
         if self.color == Color.WHITE:
             return "\u2B24"
         else:
             return "\u25CB"
 
-    def get_possible_moves(self):
+    def get_possible_moves(self) -> MoveTree:
         move_tree = MoveTree()
         root = PositionNode(self.position)
         move_tree.add(root)
@@ -78,7 +83,9 @@ class Man(Piece):
         self.last_move_tree = move_tree
         return move_tree
 
-    def _search_in_vector(self, vector, current_direction, captured=None):
+    def _search_in_vector(
+            self, vector: list[Position], current_direction: tuple[int, int], captured: Optional[list] = None
+    ) -> list[list]:
         if not captured:
             captured = []
         position_nodes = []
@@ -119,14 +126,13 @@ class King(Piece):
         super().__init__(color, position, board)
         self.last_move_tree = None
 
-    def symbol(self):
-        # return "\u1F45"
+    def symbol(self) -> str:
         if self.color == Color.WHITE:
             return "\u29BF"
         else:
             return "\u29BE"
 
-    def get_possible_moves(self):
+    def get_possible_moves(self) -> MoveTree:
         move_tree = MoveTree()
         root = PositionNode(self.position)
         move_tree.add(root)
@@ -139,7 +145,9 @@ class King(Piece):
         self.last_move_tree = move_tree
         return move_tree
 
-    def _search_in_vector(self, vector, current_direction, captured=None):
+    def _search_in_vector(
+            self, vector: list[Position], current_direction: tuple[int, int], captured: Optional[list] = None
+    ) -> list[list]:
         if not captured:
             captured = []
         position_nodes = []
@@ -170,22 +178,3 @@ class King(Piece):
             else:
                 last_piece = piece
         return position_nodes
-
-
-if __name__ == '__main__':
-    """
-    print(Color.BLACK)
-    print(Color.BLACK.name)
-    print(Color.BLACK.value)
-    print(Color.BLACK == Color.BLACK)
-
-    p1 = Position(0, 5)
-    print(p1)
-    p2 = Position.from_notation('A1')
-    print(p2)
-    """
-
-    b = Board()
-    m = Man(Color.WHITE, Position.from_notation("A1"), b)
-    k = King(Color.WHITE, Position.from_notation("A1"), b)
-    print(k)
