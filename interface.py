@@ -180,16 +180,29 @@ class InfoWidget(GridLayout):
 
     def __init__(self, game):
         super().__init__(cols=2)
+        self.game = game
         self.add_widget(Label(text="Current player: "))
         self.player_label = Label(text="White" if self.player else "Black")
         self.player = True
         self.add_widget(self.player_label)
         self.bind(player=self.player_changed)
         self.game = game
+        self.white_score_label = Label(text="White Score:")
+        self.white_score = self.game.player_white.score if self.game.player_white != None else 0
+        self.white_sc_lb = Label(text=str(self.white_score))
+        self.black_score_label = Label(text="Black Score:")
+        self.black_score = self.game.player_black.score if self.game.player_black != None else 0
+        self.black_sc_lb = Label(text=str(self.black_score))
+        self.add_widget(self.white_score_label)
+        self.add_widget(self.white_sc_lb)
+        self.add_widget(self.black_score_label)
+        self.add_widget(self.black_sc_lb)
 
     def toggle_player(self):
         self.player = not self.player
         self.parent.next_positions = []
+        self.white_sc_lb.text = str(self.game.player_white.score)
+        self.black_sc_lb.text = str(self.game.player_black.score)
 
     def player_changed(self, *args):
         self.player_label.text = "White" if self.player else "Black"
