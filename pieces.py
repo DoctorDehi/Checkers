@@ -26,7 +26,7 @@ class Piece(ABC):
     def __repr__(self) -> str:
         return f'{self.symbol()}{self.color.name[0]}:{self.position}'
 
-    def get_valid_moves(self, move_tree: MoveTree = None) -> Move:
+    def get_valid_moves(self, move_tree: MoveTree = None) -> list[Move]:
         if not move_tree:
             move_tree = self.get_possible_moves()
         return move_tree.get_valid_moves()
