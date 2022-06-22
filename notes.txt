@@ -10,8 +10,5 @@ TODO:
     NAČÍTÁNÍ HRY:
         - dopočítání skóre
 
-    OPRAVA TAHŮ:
-        - dáma se nesmí vrátit na pole kde začala
-
 
 
