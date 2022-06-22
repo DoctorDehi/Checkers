@@ -104,7 +104,7 @@ class BoardWidget(GridLayout):
         if square.piece != "None" and not self.jumped_positions:
             piece = self.game.board.get_field(square.row, square.column)
             if piece.color == player.color:
-                player.find_valid_moves()
+                # player.find_valid_moves()
                 self.next_positions = player.get_next_positions(piece, self.jumped_positions)
                 self.current_piece = piece
 
@@ -147,7 +147,6 @@ class BoardWidget(GridLayout):
 
     def game_over(self):
         self.parent.parent.screen_transition_victor()
-        # self.info.game_over(winner)
 
     def draw_board(self):
         board_size = self.game.board.get_size()
@@ -183,10 +182,8 @@ class InfoWidget(GridLayout):
         super().__init__(cols=2)
         self.add_widget(Label(text="Current player: "))
         self.player_label = Label(text="White" if self.player else "Black")
-        # self.winner_label = Label(text="")
         self.player = True
         self.add_widget(self.player_label)
-        # self.add_widget(self.winner_label)
         self.bind(player=self.player_changed)
         self.game = game
 
@@ -197,10 +194,6 @@ class InfoWidget(GridLayout):
     def player_changed(self, *args):
         self.player_label.text = "White" if self.player else "Black"
         self.player_label.color = (1, 1, 1) if self.player else (0.5, 0.5, 0.5)
-
-    def game_over(self, winner):
-        # self.winner_label.text = "Player  " + self.player_label.text + " won!"
-        ...
 
 
 class MenuScreen(Screen):
@@ -266,20 +259,6 @@ class GameScreen(Screen):
         self.surrender_btn = None
         self.layout = None
         self.game = game
-        """
-        self.layout = None
-        self.squares = []
-        self.surrender_btn = Button(text = "Surrender", font_size = 32, background_color = (0,255,255,1))
-        self.surrender_btn.bind(on_release = self.screen_transition_victor)
-        self.info = InfoWidget(self.game)
-        self.info.add_widget(self.surrender_btn)
-        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
-        self.board.create_board()
-        self.board.draw_board()
-        self.layout.add_widget(self.board)
-        self.layout.add_widget(self.info)
-        self.game.current_player.find_valid_moves()
-        """
 
     def on_enter(self, *args):
         self.layout = BoxLayout(orientation="horizontal")
@@ -290,7 +269,6 @@ class GameScreen(Screen):
         self.board = BoardWidget(self, cols=8, orientation="lr-bt")
         self.layout.add_widget(self.board)
         self.layout.add_widget(self.info)
-        self.game.current_player.find_valid_moves()
         self.add_widget(self.layout)
 
         if self.game.load_game:
@@ -298,6 +276,7 @@ class GameScreen(Screen):
         else:
             self.game.create_new_game()
 
+        # self.game.current_player.find_valid_moves()
         self.board.create_board()
         self.board.draw_board()
 
@@ -327,47 +306,10 @@ class VictorScreen(Screen):
         self.manager.current = "Menu"
 
 
-    """    
-    def start_game(self, instance):
-        layout = BoxLayout(orientation="horizontal")
-        self.info = InfoWidget(self.game)
-        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
-        self.board.create_board()
-        layout.add_widget(self.board)
-        layout.add_widget(self.info)
-        self.game.current_player.find_valid_moves()
-        
-        self.board.draw_board()
-
-        return layout
-    """
-
-
 class CheckersApp(App):
     def __init__(self, game):
         super().__init__()
         self.game = game
-
-    """
-    def build(self):
-        self.start = GridLayout(cols = 1)
-        startButton = Button(text= "Nová hra", font_size= 16)
-        startButton.bind(on_press = self.start_game)
-        self.start.add_widget(startButton)
-        return self.start
-
-    def start_game(self, instance):
-        layout = BoxLayout(orientation="horizontal")
-        self.info = InfoWidget(self.game)
-        self.board = BoardWidget(self, cols=8, orientation="lr-bt")
-        self.board.create_board()
-        layout.add_widget(self.board)
-        layout.add_widget(self.info)
-        self.game.current_player.find_valid_moves()
-        
-        self.board.draw_board()
-
-        return layout"""
 
     def build(self):
         sm = ScreenManager(transition=FadeTransition())

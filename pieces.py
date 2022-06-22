@@ -146,7 +146,8 @@ class King(Piece):
         last_piece = None
         for position in vector:
             piece = self.board.get_field_by_position(position)
-            if piece == 1:
+            # if field is blank
+            if piece == 1 or piece == self:
                 if not last_piece and not captured:
                     position_node = PositionNode(position)
                     position_nodes.append([position_node, current_direction])
