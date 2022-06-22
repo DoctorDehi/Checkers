@@ -2,8 +2,8 @@ import csv
 import random
 
 from board import Board
-from pieces import Man, King, Position, Color
 from moves import Move
+from pieces import Piece, Man, King, Position, Color
 
 
 class Game:
@@ -31,7 +31,7 @@ class Game:
         self.reset_game()
         self.load_game_from_CSV('new_game.csv')
 
-    def load_game_from_CSV(self, filename=None):
+    def load_game_from_CSV(self, filename: str = None):
         if not filename:
             filename = self.CSV_path
 
@@ -72,10 +72,10 @@ class Game:
         self.end_move(piece, move)
         # self.board.nice_print()
 
-    def make_partial_move(self, piece, position):
+    def make_partial_move(self, piece: Piece, position: Position):
         self.board.move_piece(piece, position.row, position.column)
 
-    def end_move(self, piece, move: Move):
+    def end_move(self, piece: Piece, move: Move):
         opponent = self.player_black if self.current_player == self.player_white else self.player_white
         if move.captured_pieces:
             for cap_piece in move.captured_pieces:
@@ -85,13 +85,13 @@ class Game:
 
         # transform to king
         if move.stop.row == 0 and piece.color == Color.BLACK and isinstance(piece, Man):
-            piece = self.player_black.piece_to_king(piece)
+            self.player_black.piece_to_king(piece)
         elif move.stop.row == self.board_size-1 and piece.color == Color.WHITE and isinstance(piece, Man):
             self.player_white.piece_to_king(piece)
 
 
 class Player:
-    def __init__(self, color: Color, is_bot=False):
+    def __init__(self, color: Color, is_bot: bool = False):
         self.color = color
         self.pieces = []
         self.score = 0
@@ -99,7 +99,7 @@ class Player:
         self.current_valid_moves = None
         self.is_bot = is_bot
 
-    def add_piece(self, piece):
+    def add_piece(self, piece: Piece):
         if piece not in self.pieces:
             if isinstance(piece, King):
                 self.pieces.insert(0, piece)
@@ -109,14 +109,14 @@ class Player:
         else:
             print("Player already has this piece!")
 
-    def remove_piece(self, piece):
+    def remove_piece(self, piece: Piece):
         if piece in self.pieces:
             self.pieces.remove(piece)
             piece.board.remove_piece(piece)
         else:
             print("Player does not own this piece!")
 
-    def find_valid_moves(self):
+    def find_valid_moves(self) -> dict[Piece]:
         king_capturing = False
         man_capturing = False
         moves = {}
@@ -153,7 +153,7 @@ class Player:
         self.current_valid_moves = self.valid_moves
         return self.valid_moves
 
-    def find_current_valid_moves(self, piece, jumped_positions=None):
+    def find_current_valid_moves(self, piece: Piece, jumped_positions: list = None) -> list[Move]:
         moves = []
         if not self.valid_moves.get(piece):
             return moves
@@ -169,7 +169,7 @@ class Player:
             self.current_valid_moves = {piece: moves}
         return moves
 
-    def get_next_positions(self, piece, jumped_positions=None):
+    def get_next_positions(self, piece: Piece, jumped_positions: list = None) -> list[Position]:
         if not self.valid_moves.get(piece):
             return []
         if not jumped_positions:
@@ -183,23 +183,22 @@ class Player:
                 next_positions.append(positions[index])
         return next_positions
 
-    def get_move_from_positions(self, piece, positions):
+    def get_move_from_positions(self, piece: Piece, positions: list[Position]) -> Move:
         for move in self.valid_moves[piece]:
             if str(move.get_jump_positions()) == str(positions):
                 return move
 
     # korunuj kamen na damu
-    def piece_to_king(self, piece):
+    def piece_to_king(self, piece: Piece):
         king = King(piece.color, piece.position, piece.board)
         self.remove_piece(piece)
         self.add_piece(king)
-        return piece
 
-    def get_random_move(self):
+    def get_random_move(self) -> Move:
         piece_moves = random.choice(list(self.valid_moves.values()))
         return random.choice(piece_moves)
 
-    def get_color_text(self):
+    def get_color_text(self) -> str:
         return "White" if self.color == Color.WHITE else "Black"
 
 
