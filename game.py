@@ -143,17 +143,17 @@ class Player:
                 if man_capturing or king_capturing:
                     if moves[piece][0].captured_pieces:
                         self.valid_moves[piece] = moves[piece]
-                    elif man_capturing and isinstance(piece, King):
-                        self.valid_moves[piece] = moves[piece]
-                    else:
-                        continue
+                    # elif man_capturing and isinstance(piece, King):
+                    #     self.valid_moves[piece] = moves[piece]
+                    # else:
+                    #     continue
                 else:
                     self.valid_moves[piece] = moves[piece]
 
         self.current_valid_moves = self.valid_moves
         return self.valid_moves
 
-    def find_current_valid_moves(self, piece, jumped_positions=[]):
+    def find_current_valid_moves(self, piece, jumped_positions=None):
         moves = []
         if not self.valid_moves.get(piece):
             return moves
@@ -192,9 +192,7 @@ class Player:
     def piece_to_king(self, piece):
         king = King(piece.color, piece.position, piece.board)
         self.remove_piece(piece)
-        piece.board.remove_piece(piece)
         self.add_piece(king)
-        piece.board.add_piece(king)
         return piece
 
     def get_random_move(self):
